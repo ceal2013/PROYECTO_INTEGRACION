@@ -1,10 +1,10 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.hashers import check_password
 
-from .forms import LoginForm
-from .models import Usuario
-from .decorators import custom_login_required
+from .forms import LoginForm, ProductoForm
+from .models import Usuario, Producto
+from .decorators import custom_login_required, role_required
 
 
 def login_view(request):
@@ -38,3 +38,55 @@ def user_logout(request):
 @custom_login_required
 def home(request):
 	return render(request, 'home.html')
+
+
+# --- CRUD de Productos (Solo Jefe de Ventas) ---
+@custom_login_required
+@role_required(allowed_roles=['Jefe de Ventas'])
+def listar_productos(request):
+	productos = Producto.objects.all()
+	return render(request, 'administracion/listar_productos.html', {'productos': productos})
+
+
+@custom_login_required
+@role_required(allowed_roles=['Jefe de Ventas'])
+def crear_producto(request):
+	if request.method == 'POST':
+		form = ProductoForm(request.POST)
+		if form.is_valid():
+			form.save()
+			messages.success(request, 'Producto creado exitosamente.')
+			return redirect('listar_productos')
+	else:
+		form = ProductoForm()
+
+	return render(request, 'administracion/form_producto.html', {'form': form, 'accion': 'Crear'})
+
+
+@custom_login_required
+@role_required(allowed_roles=['Jefe de Ventas'])
+def editar_producto(request, codigo):
+	producto = get_object_or_404(Producto, codigo=codigo)
+	if request.method == 'POST':
+		form = ProductoForm(request.POST, instance=producto)
+		if form.is_valid():
+			form.save()
+			messages.success(request, 'Producto actualizado exitosamente.')
+			return redirect('listar_productos')
+	else:
+		form = ProductoForm(instance=producto)
+
+	return render(request, 'administracion/form_producto.html', {'form': form, 'accion': 'Editar'})
+
+
+@custom_login_required
+@role_required(allowed_roles=['Jefe de Ventas'])
+def eliminar_producto(request, codigo):
+	producto = get_object_or_404(Producto, codigo=codigo)
+	try:
+		producto.delete()
+		messages.success(request, 'Producto eliminado exitosamente.')
+	except Exception:
+		messages.error(request, 'No se puede eliminar el producto, está siendo usado en una venta.')
+
+	return redirect('listar_productos')
