@@ -2,7 +2,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.hashers import check_password
 
-from .forms import LoginForm, ProductoForm, ClienteForm
+from .forms import LoginForm, ProductoForm, ClienteForm, UsuarioForm
+from django import forms
 from .models import Usuario, Producto, Cliente
 from .decorators import custom_login_required, role_required
 
@@ -142,3 +143,63 @@ def eliminar_cliente(request, rut):
 		messages.error(request, 'No se puede eliminar el cliente, está siendo usado en una venta.')
 
 	return redirect('listar_clientes')
+
+
+# --- CRUD de Usuarios (Solo Jefe de Ventas) ---
+@custom_login_required
+@role_required(allowed_roles=['Jefe de Ventas'])
+def listar_usuarios(request):
+	usuarios = Usuario.objects.all()
+	return render(request, 'administracion/listar_usuarios.html', {'usuarios': usuarios})
+
+
+@custom_login_required
+@role_required(allowed_roles=['Jefe de Ventas'])
+def crear_usuario(request):
+	if request.method == 'POST':
+		form = UsuarioForm(request.POST)
+		if form.is_valid():
+			form.save()  # UsuarioForm maneja el hash de la contraseña
+			messages.success(request, 'Usuario creado exitosamente.')
+			return redirect('listar_usuarios')
+	else:
+		form = UsuarioForm()
+
+	return render(request, 'administracion/form_usuario.html', {'form': form, 'accion': 'Crear'})
+
+
+@custom_login_required
+@role_required(allowed_roles=['Jefe de Ventas'])
+def editar_usuario(request, id_usuario):
+	usuario = get_object_or_404(Usuario, id_usuario=id_usuario)
+	if request.method == 'POST':
+		form = UsuarioForm(request.POST, instance=usuario)
+		if form.is_valid():
+			form.save()
+			messages.success(request, 'Usuario actualizado exitosamente.')
+			return redirect('listar_usuarios')
+	else:
+		# Ocultamos la contraseña actual, solo permitimos cambiarla
+		form = UsuarioForm(instance=usuario)
+		form.fields['password'].widget = forms.PasswordInput(render_value=False)
+		form.fields['password_confirm'].widget = forms.PasswordInput(render_value=False)
+
+	return render(request, 'administracion/form_usuario.html', {'form': form, 'accion': 'Editar'})
+
+
+@custom_login_required
+@role_required(allowed_roles=['Jefe de Ventas'])
+def eliminar_usuario(request, id_usuario):
+	usuario = get_object_or_404(Usuario, id_usuario=id_usuario)
+	# Evitar que el Jefe de Ventas se elimine a sí mismo
+	if usuario.id_usuario == request.session.get('usuario_id'):
+		messages.error(request, 'No puedes eliminar tu propia cuenta de administrador.')
+		return redirect('listar_usuarios')
+
+	try:
+		usuario.delete()
+		messages.success(request, 'Usuario eliminado exitosamente.')
+	except Exception:
+		messages.error(request, 'No se puede eliminar el usuario, está asociado a ventas.')
+
+	return redirect('listar_usuarios')
