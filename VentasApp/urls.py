@@ -1,5 +1,10 @@
 from django.urls import path
-from . import views  # Importaremos las vistas más adelante
+from . import views
+from django.views.generic import RedirectView
 
-urlpatterns = [  # Aquí pondremos nuestras rutas, como la del login
+urlpatterns = [
+	path('', RedirectView.as_view(url='login/')),
+	path('login/', views.login_view, name='login'),
+	path('logout/', views.user_logout, name='logout'),
+	path('home/', views.home, name='home'),
 ]
