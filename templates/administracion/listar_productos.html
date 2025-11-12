@@ -1,6 +1,13 @@
 {% extends 'base_layout.html' %}
 {% block content %}
 
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="card-title">Gestión de Productos</h2>
+    <a href="{% url 'crear_producto' %}" class="btn btn-success">
+        <i class="bi bi-plus-circle me-2"></i> Crear Nuevo Producto
+    </a>
+</div>
+
 <div class="card">
     <div class="card-body">
         <div class="table-responsive">
