@@ -1,5 +1,5 @@
 from django import forms
-from .models import Usuario, Producto  # Importamos el Usuario y Producto de nuestra app
+from .models import Usuario, Producto, Cliente  # Importamos el Usuario, Producto y Cliente de nuestra app
 
 
 class LoginForm(forms.Form):
@@ -49,6 +49,18 @@ class ProductoForm(forms.ModelForm):
     class Meta:
         model = Producto
         fields = ['codigo', 'nombre', 'precio_unitario', 'stock']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Añadir clases de Bootstrap a todos los campos
+        for field in self.fields:
+            self.fields[field].widget.attrs.update({'class': 'form-control'})
+
+
+class ClienteForm(forms.ModelForm):
+    class Meta:
+        model = Cliente
+        fields = ['rut', 'razon_social', 'giro', 'direccion']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
