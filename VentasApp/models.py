@@ -39,7 +39,7 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ['rol']
+    REQUIRED_FIELDS = []
 
     objects = UsuarioManager()
 
