@@ -1,10 +1,11 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.hashers import check_password
+from datetime import date
 
 from .forms import LoginForm, ProductoForm, ClienteForm, UsuarioForm
 from django import forms
-from .models import Usuario, Producto, Cliente
+from .models import Usuario, Producto, Cliente, ControlDia
 from .decorators import custom_login_required, role_required
 
 
@@ -203,3 +204,27 @@ def eliminar_usuario(request, id_usuario):
 		messages.error(request, 'No se puede eliminar el usuario, está asociado a ventas.')
 
 	return redirect('listar_usuarios')
+
+
+# --- VISTA DE CONTROL DE DÍA (Solo Jefe de Ventas) ---
+@custom_login_required
+@role_required(allowed_roles=['Jefe de Ventas'])
+def control_dia(request):
+	# Obtenemos o creamos el control para la fecha de HOY
+	control_hoy, created = ControlDia.objects.get_or_create(
+		fecha=date.today(),
+		defaults={'id_usuario_id': request.session.get('usuario_id')}
+	)
+	if request.method == 'POST':
+		# Invertimos el estado
+		if control_hoy.estado == 'Cerrado':
+			control_hoy.estado = 'Abierto'
+			messages.success(request, 'El día ha sido ABIERTO. Ya se pueden registrar ventas.')
+		else:
+			control_hoy.estado = 'Cerrado'
+			messages.warning(request, 'El día ha sido CERRADO. No se registrarán nuevas ventas.')
+        
+		control_hoy.id_usuario_id = request.session.get('usuario_id') # Actualizamos quien hizo el cambio
+		control_hoy.save()
+		return redirect('control_dia')
+	return render(request, 'control/control_dia.html', {'control_hoy': control_hoy})

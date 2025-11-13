@@ -28,4 +28,7 @@ urlpatterns = [
 
 	# URLs para Control de Día
 	path('control_dia/', views.control_dia, name='control_dia'),
+
+	# URLs para Ventas (Vendedor)
+	path('nueva_venta/', views.crear_venta, name='crear_venta'),
 ]
