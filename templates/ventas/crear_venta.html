@@ -392,8 +392,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 const cliente = clientesData.find(c => c.id == payloadGbl.cliente_id);
                 rut = cliente.rut;
                 razon = cliente.razon_social;
-                giro = ""; 
-                dir = "";  
+                giro = cliente.giro;
+                dir = cliente.direccion;
             } else {
                 rut = payloadGbl.cliente_nuevo.rut;
                 razon = payloadGbl.cliente_nuevo.razon_social;

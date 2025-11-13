@@ -372,7 +372,7 @@ def crear_venta(request):
 		for p in productos_qs:
 			p['precio_unitario'] = str(p['precio_unitario'])
 			productos_list.append(p)
-		clientes = list(Cliente.objects.values('id', 'rut', 'razon_social'))
+		clientes = list(Cliente.objects.values('id', 'rut', 'razon_social', 'giro', 'direccion'))
 		context = {
 			'venta_form': venta_form,
 			'cliente_form': cliente_form,
