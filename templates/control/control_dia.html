@@ -1,0 +1,37 @@
+{% extends 'base_layout.html' %}
+{% block content %}
+
+<div class="container">
+    <div class="card">
+        <div class="card-body">
+
+                {% if control_hoy.estado == 'Abierto' %}
+                    <h1 class="display-4 text-success">DÍA ABIERTO</h1>
+                    <p class="lead">El sistema está aceptando ventas.</p>
+                    <form method="post" class="mt-4">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger btn-lg">
+                            <i class="bi bi-lock-fill me-2"></i> Cerrar Día
+                        </button>
+                    </form>
+                {% else %}
+                    <h1 class="display-4 text-danger">DÍA CERRADO</h1>
+                    <p class="lead">El sistema no está aceptando ventas.</p>
+                    <form method="post" class="mt-4">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="bi bi-unlock-fill me-2"></i> Abrir Día
+                        </button>
+                    </form>
+                {% endif %}
+            </div>
+            <div class="card-footer text-muted">
+                Último cambio realizado por: {{ control_hoy.id_usuario.username }}
+            </div>
+        </div>
+    </div>
+
+    </div>
+</div>
+
+{% endblock %}
