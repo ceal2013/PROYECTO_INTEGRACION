@@ -323,14 +323,21 @@ def crear_venta(request):
 		venta_form = VentaForm()
 		cliente_form = ClienteForm()
 		detalle_form = DetalleVentaForm()
-
-		productos = list(Producto.objects.filter(stock__gt=0).values('codigo', 'nombre', 'precio_unitario', 'stock'))
+		
+		# Obtenemos los productos
+		productos_qs = Producto.objects.filter(stock__gt=0).values('codigo', 'nombre', 'precio_unitario', 'stock')
+		
+		# Convertimos Decimal a string para JSON
+		productos_list = []
+		for p in productos_qs:
+			p['precio_unitario'] = str(p['precio_unitario'])
+			productos_list.append(p)
 		clientes = list(Cliente.objects.values('id', 'rut', 'razon_social'))
 		context = {
 			'venta_form': venta_form,
 			'cliente_form': cliente_form,
 			'detalle_form': detalle_form,
-			'productos_json': json.dumps(productos),
+			'productos_json': json.dumps(productos_list), # Usamos la lista convertida
 			'clientes_json': json.dumps(clientes),
 		}
 		return render(request, 'ventas/crear_venta.html', context)
