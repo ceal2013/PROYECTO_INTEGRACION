@@ -1,5 +1,5 @@
 from django import forms
-from .models import Usuario, Producto, Cliente  # Importamos el Usuario, Producto y Cliente de nuestra app
+from .models import Usuario, Producto, Cliente, Venta, DetalleVenta  # Importamos modelos usados en formularios
 
 
 class LoginForm(forms.Form):
@@ -67,3 +67,30 @@ class ClienteForm(forms.ModelForm):
         # Añadir clases de Bootstrap a todos los campos
         for field in self.fields:
             self.fields[field].widget.attrs.update({'class': 'form-control'})
+
+
+class VentaForm(forms.ModelForm):
+    class Meta:
+        model = Venta
+        fields = ['tipo_documento', 'id_cliente']
+        widgets = {
+            'tipo_documento': forms.Select(attrs={'class': 'form-select', 'id': 'tipo_documento'}),
+            'id_cliente': forms.Select(attrs={'class': 'form-select', 'id': 'id_cliente'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Hacemos que el cliente no sea obligatorio por defecto (se valida con JS)
+        self.fields['id_cliente'].required = False
+
+
+class DetalleVentaForm(forms.ModelForm):
+    class Meta:
+        model = DetalleVenta
+        fields = ['id_producto', 'cantidad']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Añadimos 'form-control' a los campos del detalle
+        self.fields['id_producto'].widget.attrs.update({'class': 'form-control producto-select'})
+        self.fields['cantidad'].widget.attrs.update({'class': 'form-control cantidad-input', 'min': '1'})
