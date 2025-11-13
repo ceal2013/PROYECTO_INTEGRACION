@@ -1,210 +1,193 @@
 {% extends 'base_layout.html' %}
 
 {% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="card-title">Nueva Venta</h2>
+    </div>
 
-<div class="row">
-    <div class="col-lg-8">
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">1. Detalles del Documento</h5>
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header"><h5 class="mb-0">1. Detalles del Documento</h5></div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label for="{{ venta_form.tipo_documento.id_for_label }}" class="form-label">Tipo de Documento</label>
+                            {{ venta_form.tipo_documento }}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="{{ venta_form.folio.id_for_label }}" class="form-label">N° Documento</label>
+                            {{ venta_form.folio }}
+                        </div>
+                        <div class="col-md-4" id="cliente-existente-wrapper" style="display: none;">
+                            <label for="{{ venta_form.id_cliente.id_for_label }}" class="form-label">Cliente Existente</label>
+                            {{ venta_form.id_cliente }}
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <label for="{{ venta_form.tipo_documento.id_for_label }}" class="form-label">Tipo de Documento</label>
-                        {{ venta_form.tipo_documento }}
+
+            <div class="card mb-4" id="cliente-nuevo-wrapper" style="display: none;">
+                <div class="card-header"><h5 class="mb-0">Datos del Cliente (Factura)</h5></div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ cliente_form.rut.id_for_label }}" class="form-label">RUT</label>
+                            {{ cliente_form.rut }}
+                            <div id="rut-error" class="invalid-feedback" style="display: none;"></div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ cliente_form.razon_social.id_for_label }}" class="form-label">Razón Social</label>
+                            {{ cliente_form.razon_social }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ cliente_form.giro.id_for_label }}" class="form-label">Giro</label>
+                            {{ cliente_form.giro }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ cliente_form.direccion.id_for_label }}" class="form-label">Dirección</label>
+                            {{ cliente_form.direccion }}
+                        </div>
                     </div>
-                    <div class="col-md-6">
-                        <label for="folio" class="form-label">Folio</label>
-                        <input type="text" id="folio" class="form-control" readonly>
-                    </div>
-                    <div class="col-md-6" id="cliente-existente-wrapper" style="display: none;">
-                        <label for="{{ venta_form.id_cliente.id_for_label }}" class="form-label">Cliente Existente</label>
-                        {{ venta_form.id_cliente }}
+                    <button type="button" id="btn-limpiar-cliente" class="btn btn-sm btn-outline-secondary">Limpiar Formulario</button>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header"><h5 class="mb-0">2. Productos</h5></div>
+                <div class="card-body">
+                    <div class="row align-items-end">
+                        <div class="col-md-6">
+                            <label for="producto-select" class="form-label">Buscar Producto (por nombre o código)</label>
+                            <input class="form-control" id="producto-select" list="producto-list" placeholder="Seleccione un tipo de documento..." disabled>
+                            <datalist id="producto-list"></datalist>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="producto-cantidad" class="form-label">Cantidad</label>
+                            <input type="number" id="producto-cantidad" class="form-control" value="1" min="1">
+                        </div>
+                        <div class="col-md-3">
+                            <button type="button" id="btn-agregar-producto" class="btn btn-primary w-100" disabled>Agregar</button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="card mb-4" id="cliente-nuevo-wrapper" style="display: none;">
-            <div class="card-header">
-                <h5 class="mb-0">Datos del Cliente (Factura)</h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="{{ cliente_form.rut.id_for_label }}" class="form-label">RUT</label>
-                        {{ cliente_form.rut }}
-                        <div id="rut-error" class="invalid-feedback" style="display: none;"></div>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label for="{{ cliente_form.razon_social.id_for_label }}" class="form-label">Razón Social</label>
-                        {{ cliente_form.razon_social }}
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label for="{{ cliente_form.giro.id_for_label }}" class="form-label">Giro</label>
-                        {{ cliente_form.giro }}
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label for="{{ cliente_form.direccion.id_for_label }}" class="form-label">Dirección</label>
-                        {{ cliente_form.direccion }}
-                    </div>
+        <div class="col-lg-4">
+            <div class="card sticky-top" style="top: 20px;">
+                <div class="card-header"><h5 class="mb-0">3. Resumen de Venta</h5></div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush" id="lista-productos-venta">
+                        <li class="list-group-item text-center text-muted" id="lista-vacia">No hay productos agregados.</li>
+                    </ul>
                 </div>
-                <button type="button" id="btn-limpiar-cliente" class="btn btn-sm btn-outline-secondary">Limpiar Formulario</button>
-            </div>
-        </div>
-
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">2. Productos</h5>
-            </div>
-            <div class="card-body">
-                <div class="row align-items-end">
-                    <div class="col-md-6">
-                        <label for="producto-select" class="form-label">Buscar Producto (por nombre o código)</label>
-                        <input class="form-control" id="producto-select" list="producto-list" placeholder="Escribe para buscar...">
-                        <datalist id="producto-list"></datalist>
-                    </div>
-                    <div class="col-md-3">
-                        <label for="producto-cantidad" class="form-label">Cantidad</label>
-                        <input type="number" id="producto-cantidad" class="form-control" value="1" min="1">
-                    </div>
-                    <div class="col-md-3">
-                        <button type="button" id="btn-agregar-producto" class="btn btn-primary w-100">Agregar</button>
-                    </div>
+                <div class="card-footer">
+                    <h5 class="d-flex justify-content-between"><span>Subtotal:</span><span id="resumen-subtotal">$0</span></h5>
+                    <h5 class="d-flex justify-content-between"><span>IVA (19%):</span><span id="resumen-iva">$0</span></h5>
+                    <hr>
+                    <h3 class="d-flex justify-content-between"><strong>Total:</strong><strong id="resumen-total">$0</strong></h3>
+                    <button type="button" id="btn-mostrar-vista-previa" class="btn btn-success btn-lg w-100 mt-3">
+                        <i class="bi bi-eye-fill me-2"></i> Revisar y Registrar Venta
+                    </button>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <div class="col-lg-4">
-        <div class="card sticky-top" style="top: 20px;">
-            <div class="card-header">
-                <h5 class="mb-0">3. Resumen de Venta</h5>
+<div class="modal fade" id="vistaPreviaModal" tabindex="-1" aria-labelledby="vistaPreviaModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="vistaPreviaModalLabel">Vista Previa del Documento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="card-body">
-                <ul class="list-group list-group-flush" id="lista-productos-venta">
-                    <li class="list-group-item text-center text-muted" id="lista-vacia">No hay productos agregados.</li>
-                </ul>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <h4>BAZAR (Tu Negocio)</h4>
+                        <p class="mb-0">RUT: 77.777.777-7</p>
+                        <p class="mb-0">Dirección Ficticia 123, Comuna</p>
+                    </div>
+                    <div class="col-6 text-end">
+                        <h3 class="text-danger" id="modal-tipo-documento">BOLETA</h3>
+                        <h4 class="text-danger">N° <span id="modal-folio">0000</span></h4>
+                    </div>
+                </div>
+
+                <div id="modal-datos-cliente" style="display: none;">
+                    <h5>Datos del Cliente</h5>
+                    <div class="card p-3 mb-3">
+                        <p class="mb-0"><strong>RUT:</strong> <span id="modal-cliente-rut"></span></p>
+                        <p class="mb-0"><strong>Razón Social:</strong> <span id="modal-cliente-razon"></span></p>
+                        <p class="mb-0"><strong>Giro:</strong> <span id="modal-cliente-giro"></span></p>
+                        <p class="mb-0"><strong>Dirección:</strong> <span id="modal-cliente-dir"></span></p>
+                    </div>
+                </div>
+
+                <h5>Detalle</h5>
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th class="text-center">Cant.</th>
+                            <th class="text-end">P. Unitario</th>
+                            <th class="text-end">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modal-body-productos">
+                        </tbody>
+                </table>
+
+                <div class="row justify-content-end">
+                    <div class="col-md-5">
+                        <ul class="list-group">
+                            <li class="list-group-item d-flex justify-content-between">
+                                <strong>Subtotal:</strong> <span id="modal-subtotal">$0</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <strong>IVA (19%):</strong> <span id="modal-iva">$0</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between list-group-item-success">
+                                <h4>Total:</h4>
+                                <h4><strong id="modal-total-final">$0</strong></h4>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
             </div>
-            <div class="card-footer">
-                <h5 class="d-flex justify-content-between">
-                    <span>Subtotal:</span>
-                    <span id="resumen-subtotal">$0</span>
-                </h5>
-                <h5 class="d-flex justify-content-between">
-                    <span>IVA (19%):</span>
-                    <span id="resumen-iva">$0</span>
-                </h5>
-                <hr>
-                <h3 class="d-flex justify-content-between">
-                    <strong>Total:</strong>
-                    <strong id="resumen-total">$0</strong>
-                </h3>
-                <button type="button" id="btn-mostrar-vista-previa" class="btn btn-success btn-lg w-100 mt-3">
-                    <i class="bi bi-eye-fill me-2"></i> Revisar y Registrar Venta
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" id="btn-confirmar-venta" class="btn btn-success">
+                    <i class="bi bi-check-circle me-2"></i> Confirmar y Guardar Venta
                 </button>
             </div>
         </div>
     </div>
 </div>
-
-<!-- Modal de Vista Previa -->
-<div class="modal fade" id="vistaPreviaModal" tabindex="-1" aria-labelledby="vistaPreviaModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="vistaPreviaModalLabel">Vista Previa del Documento</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <div class="row mb-3">
-            <div class="col-6">
-                <h4>BAZAR (Tu Negocio)</h4>
-                <p class="mb-0">RUT: 77.777.777-7</p>
-                <p class="mb-0">Dirección Ficticia 123, Comuna</p>
-            </div>
-            <div class="col-6 text-end">
-                <h3 class="text-danger" id="modal-tipo-documento">BOLETA</h3>
-                <h4 class="text-danger">N° <span id="modal-folio">0000</span></h4>
-            </div>
-        </div>
-
-        <div id="modal-datos-cliente" style="display: none;">
-            <h5>Datos del Cliente</h5>
-            <div class="card p-3 mb-3">
-                <p class="mb-0"><strong>RUT:</strong> <span id="modal-cliente-rut"></span></p>
-                <p class="mb-0"><strong>Razón Social:</strong> <span id="modal-cliente-razon"></span></p>
-                <p class="mb-0"><strong>Giro:</strong> <span id="modal-cliente-giro"></span></p>
-                <p class="mb-0"><strong>Dirección:</strong> <span id="modal-cliente-dir"></span></p>
-            </div>
-        </div>
-
-        <h5>Detalle</h5>
-        <table class="table table-sm">
-            <thead>
-                <tr>
-                    <th>Producto</th>
-                    <th class="text-center">Cant.</th>
-                    <th class="text-end">P. Unitario</th>
-                    <th class="text-end">Subtotal</th>
-                </tr>
-            </thead>
-            <tbody id="modal-body-productos"></tbody>
-        </table>
-
-        <div class="row justify-content-end">
-            <div class="col-md-5">
-                <ul class="list-group">
-                    <li class="list-group-item d-flex justify-content-between">
-                        <strong>Subtotal:</strong> <span id="modal-subtotal">$0</span>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between">
-                        <strong>IVA (19%):</strong> <span id="modal-iva">$0</span>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between list-group-item-success">
-                        <h4>Total:</h4>
-                        <h4><strong id="modal-total-final">$0</strong></h4>
-                    </li>
-                </ul>
-            </div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <button type="button" id="btn-confirmar-venta" class="btn btn-success">
-            <i class="bi bi-check-circle me-2"></i> Confirmar y Guardar Venta
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
 {{ productos_json|json_script:"productos-data" }}
 {{ clientes_json|json_script:"clientes-data" }}
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // --- 1. OBTENER DATOS ---
-    const productosData = JSON.parse(document.getElementById('productos-data').textContent || '[]');
-    const clientesData = JSON.parse(document.getElementById('clientes-data').textContent || '[]');
 
-    function getCookie(name) {
-        const value = `; ${document.cookie}`;
-        const parts = value.split(`; ${name}=`);
-        if (parts.length === 2) return parts.pop().split(';').shift();
-    }
-    const csrfToken = getCookie('csrftoken') || '{{ csrf_token }}';
+    // --- 1. OBTENER DATOS ---
+    const productosData = JSON.parse(document.getElementById('productos-data').textContent);
+    const clientesData = JSON.parse(document.getElementById('clientes-data').textContent);
+    const csrfToken = '{{ csrf_token }}';
 
     // --- 2. ELEMENTOS DEL DOM ---
-    const tipoDocumentoSelect = document.getElementById('tipo_documento') || document.getElementById('id_tipo_documento') || document.querySelector('[name="tipo_documento"]');
-    const folioInput = document.getElementById('folio') || document.getElementById('id_folio');
+    const tipoDocumentoSelect = document.getElementById('tipo_documento');
+    const folioInput = document.getElementById('folio'); // <- CORREGIDO: Usará el {{ venta_form.folio }}
     const clienteExistenteWrapper = document.getElementById('cliente-existente-wrapper');
-    const clienteExistenteSelect = document.getElementById('id_cliente') || document.querySelector('[name="id_cliente"]');
+    const clienteExistenteSelect = document.getElementById('id_cliente');
     const clienteNuevoWrapper = document.getElementById('cliente-nuevo-wrapper');
     const btnLimpiarCliente = document.getElementById('btn-limpiar-cliente');
     const rutInput = document.getElementById('id_rut');
     const rutErrorDiv = document.getElementById('rut-error');
+    
     const productoDatalist = document.getElementById('producto-list');
     const productoInput = document.getElementById('producto-select');
     const cantidadInput = document.getElementById('producto-cantidad');
@@ -212,15 +195,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const listaProductosVenta = document.getElementById('lista-productos-venta');
     const listaVacia = document.getElementById('lista-vacia');
+
     const resumenSubtotal = document.getElementById('resumen-subtotal');
     const resumenIva = document.getElementById('resumen-iva');
     const resumenTotal = document.getElementById('resumen-total');
+    
     const btnMostrarVistaPrevia = document.getElementById('btn-mostrar-vista-previa');
     const btnConfirmarVenta = document.getElementById('btn-confirmar-venta');
     const vistaPreviaModal = new bootstrap.Modal(document.getElementById('vistaPreviaModal'));
 
-    // --- 3. ESTADO ---
-    let venta = { productos: [] };
+    // --- 3. ESTADO DE LA VENTA (en memoria) ---
+    let venta = {
+        productos: [] 
+    };
     let payloadGbl = {};
 
     // --- 4. POBLAR DATALISTS ---
@@ -229,154 +216,326 @@ document.addEventListener('DOMContentLoaded', function() {
         option.value = `${p.codigo} - ${p.nombre}`;
         productoDatalist.appendChild(option);
     });
-    if (clienteExistenteSelect) {
-        clienteExistenteSelect.innerHTML = '<option value="">Seleccione un cliente...</option>';
-        clientesData.forEach(c => {
-            const option = document.createElement('option');
-            option.value = c.id;
-            option.textContent = `${c.rut} - ${c.razon_social}`;
-            clienteExistenteSelect.appendChild(option);
-        });
-    }
 
-    // --- 5. EVENTOS ---
-    if (rutInput) {
-        rutInput.addEventListener('blur', function() {
-            const rut = (this.value || '').trim();
-            if (!rut) { this.classList.remove('is-invalid'); if (rutErrorDiv) rutErrorDiv.style.display = 'none'; return; }
-            if (!validarRut(rut)) { this.classList.add('is-invalid'); if (rutErrorDiv) { rutErrorDiv.textContent = 'RUT no válido. Formato: 12345678-9'; rutErrorDiv.style.display = 'block'; } }
-            else { this.classList.remove('is-invalid'); if (rutErrorDiv) rutErrorDiv.style.display = 'none'; }
-        });
-    }
+    clienteExistenteSelect.innerHTML = '<option value="">Seleccione un cliente...</option>';
+    clientesData.forEach(c => {
+        const option = document.createElement('option');
+        option.value = c.id;
+        option.textContent = `${c.rut} - ${c.razon_social}`;
+        clienteExistenteSelect.appendChild(option);
+    });
 
-    if (tipoDocumentoSelect) {
-        tipoDocumentoSelect.addEventListener('change', function() {
-            const tipo = this.value || this.options?.[this.selectedIndex]?.value;
-            const esFactura = tipo === 'Factura';
-            if (clienteExistenteWrapper) clienteExistenteWrapper.style.display = esFactura ? 'block' : 'none';
-            actualizarVisibilidadFormCliente();
-            if (tipo) {
-                if (folioInput) folioInput.value = 'Cargando...';
-                if (productoInput) productoInput.disabled = true;
-                if (btnAgregarProducto) btnAgregarProducto.disabled = true;
-                fetch(`{% url 'get_next_folio' %}?tipo_documento=${tipo}`)
-                    .then(r => r.json())
-                    .then(data => {
-                        if (folioInput) folioInput.value = data.next_folio;
-                        if (productoInput) productoInput.disabled = false;
-                        if (btnAgregarProducto) btnAgregarProducto.disabled = false;
-                    })
-                    .catch(() => { if (folioInput) folioInput.value = ''; if (productoInput) productoInput.disabled = false; if (btnAgregarProducto) btnAgregarProducto.disabled = false; });
-            } else {
-                if (folioInput) folioInput.value = '';
-                if (productoInput) productoInput.disabled = true;
-                if (btnAgregarProducto) btnAgregarProducto.disabled = true;
-            }
-        });
-    }
+    // --- 5. LÓGICA DE EVENTOS ---
 
-    if (clienteExistenteSelect) clienteExistenteSelect.addEventListener('change', actualizarVisibilidadFormCliente);
+    rutInput.addEventListener('blur', function() {
+        const rut = this.value;
+        if (rut === '') {
+            rutInput.classList.remove('is-invalid');
+            rutErrorDiv.style.display = 'none';
+            return;
+        }
+        if (!validarRut(rut)) {
+            rutInput.classList.add('is-invalid');
+            rutErrorDiv.textContent = 'RUT no válido. Formato: 12345678-9';
+            rutErrorDiv.style.display = 'block';
+        } else {
+            rutInput.classList.remove('is-invalid');
+            rutErrorDiv.style.display = 'none';
+        }
+    });
 
-    if (btnLimpiarCliente) btnLimpiarCliente.addEventListener('click', function() {
-        if (clienteExistenteSelect) clienteExistenteSelect.value = '';
-        if (rutInput) { rutInput.value = ''; rutInput.classList.remove('is-invalid'); }
-        if (rutErrorDiv) rutErrorDiv.style.display = 'none';
-        ['id_razon_social','id_giro','id_direccion'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    tipoDocumentoSelect.addEventListener('change', function() {
+        const tipo = this.value;
+        const esFactura = tipo === 'Factura';
+        
+        clienteExistenteWrapper.style.display = esFactura ? 'block' : 'none';
+        actualizarVisibilidadFormCliente();
+
+        if (tipo) {
+            folioInput.value = 'Cargando...';
+            productoInput.disabled = true;
+            btnAgregarProducto.disabled = true;
+
+            fetch(`{% url 'get_next_folio' %}?tipo_documento=${tipo}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.next_folio) {
+                        folioInput.value = data.next_folio;
+                        productoInput.disabled = false;
+                        btnAgregarProducto.disabled = false;
+                        productoInput.placeholder = 'Escribe para buscar...';
+                    } else {
+                        folioInput.value = 'Error';
+                        alert('Error al obtener el folio.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al buscar folio:', error);
+                    folioInput.value = 'Error';
+                });
+        } else {
+            folioInput.value = '';
+            productoInput.disabled = true;
+            btnAgregarProducto.disabled = true;
+            productoInput.placeholder = 'Seleccione un tipo de documento...';
+        }
+    });
+
+    clienteExistenteSelect.addEventListener('change', function() {
         actualizarVisibilidadFormCliente();
     });
 
-    if (btnAgregarProducto) btnAgregarProducto.addEventListener('click', function() {
-        const valor = (productoInput && productoInput.value) ? productoInput.value : '';
-        const [codigo, ...nombreArr] = valor.split(' - ');
-        const cantidad = parseInt(cantidadInput ? cantidadInput.value : 0) || 0;
-        const producto = productosData.find(p => p.codigo === (codigo || '').trim());
+    btnLimpiarCliente.addEventListener('click', function() {
+        clienteExistenteSelect.value = '';
+        rutInput.value = '';
+        rutInput.classList.remove('is-invalid');
+        rutErrorDiv.style.display = 'none';
+        document.getElementById('id_razon_social').value = '';
+        document.getElementById('id_giro').value = '';
+        document.getElementById('id_direccion').value = '';
+        actualizarVisibilidadFormCliente();
+    });
+
+    btnAgregarProducto.addEventListener('click', function() {
+        const [codigo, ...nombreArr] = productoInput.value.split(' - ');
+        const nombre = nombreArr.join(' - ');
+        const cantidad = parseInt(cantidadInput.value);
+        const producto = productosData.find(p => p.codigo === codigo);
+
         if (!producto) { alert('Producto no válido. Selecciónelo de la lista.'); return; }
         if (isNaN(cantidad) || cantidad <= 0) { alert('Ingrese una cantidad válida.'); return; }
-        if (producto.stock < cantidad) { alert(`Stock insuficiente. Solo quedan ${producto.stock} unidades de ${producto.nombre}.`); return; }
-        const itemExistente = venta.productos.find(p => p.codigo === producto.codigo);
+        
+        const stockDisponible = parseFloat(producto.stock);
+        if (stockDisponible < cantidad) {
+            alert(`Stock insuficiente. Solo quedan ${stockDisponible} unidades de ${producto.nombre}.`);
+            return;
+        }
+
+        const itemExistente = venta.productos.find(p => p.codigo === codigo);
         if (itemExistente) {
             const nuevaCantidad = itemExistente.cantidad + cantidad;
-            if (producto.stock < nuevaCantidad) { alert(`Stock insuficiente. Ya tiene ${itemExistente.cantidad} y solo quedan ${producto.stock} en total.`); return; }
-            itemExistente.cantidad = nuevaCantidad; itemExistente.subtotal = itemExistente.precio * nuevaCantidad;
+            if (stockDisponible < nuevaCantidad) {
+                alert(`Stock insuficiente. Ya tiene ${itemExistente.cantidad} en el carro y solo quedan ${stockDisponible} en total.`);
+                return;
+            }
+            itemExistente.cantidad = nuevaCantidad;
+            itemExistente.subtotal = itemExistente.precio * nuevaCantidad;
         } else {
-            venta.productos.push({ codigo: producto.codigo, nombre: producto.nombre, cantidad: cantidad, precio: parseFloat(producto.precio_unitario), subtotal: parseFloat(producto.precio_unitario) * cantidad });
+            venta.productos.push({
+                codigo: producto.codigo,
+                nombre: producto.nombre,
+                cantidad: cantidad,
+                precio: parseFloat(producto.precio_unitario),
+                subtotal: parseFloat(producto.precio_unitario) * cantidad
+            });
         }
-        if (productoInput) productoInput.value = '';
-        if (cantidadInput) cantidadInput.value = '1';
+
+        productoInput.value = '';
+        cantidadInput.value = '1';
         actualizarVistaVenta();
     });
 
-    // Mostrar vista previa
-    if (btnMostrarVistaPrevia) btnMostrarVistaPrevia.addEventListener('click', function() {
-        const tipo = tipoDocumentoSelect ? (tipoDocumentoSelect.value || tipoDocumentoSelect.options?.[tipoDocumentoSelect.selectedIndex]?.value) : '';
-        const folioVal = folioInput ? folioInput.value : '';
-        if (!tipo || !folioVal || folioVal === 'Cargando...' ) { alert('Debe seleccionar un Tipo de Documento y tener un Folio válido.'); return; }
-        payloadGbl = { tipo_documento: tipo, folio: folioVal, cliente_id: (clienteExistenteSelect ? clienteExistenteSelect.value : null) || null, productos: venta.productos.map(p => ({ codigo: p.codigo, cantidad: p.cantidad })), cliente_nuevo: null };
-        if (venta.productos.length === 0) { alert('No hay productos en la venta.'); return; }
-        if (payloadGbl.tipo_documento === 'Factura' && !payloadGbl.cliente_id) {
-            const rut = rutInput ? (rutInput.value || '') : '';
-            const razon = document.getElementById('id_razon_social') ? document.getElementById('id_razon_social').value : '';
-            if (!rut || !razon) { alert('Para Factura, debe seleccionar un cliente existente o ingresar RUT y Razón Social.'); return; }
-            if (!validarRut(rut)) { alert('El RUT ingresado no es válido.'); return; }
-            payloadGbl.cliente_nuevo = { rut: rut, razon_social: razon, giro: document.getElementById('id_giro') ? document.getElementById('id_giro').value : '', direccion: document.getElementById('id_direccion') ? document.getElementById('id_direccion').value : '' };
+
+    // --- 7. LÓGICA DE GUARDADO (CON MODAL) ---
+
+    btnMostrarVistaPrevia.addEventListener('click', function() {
+        const tipoDoc = tipoDocumentoSelect.value;
+        const folioVal = folioInput.value;
+
+        if (!tipoDoc || !folioVal || folioVal === 'Cargando...' || folioVal === 'Error') {
+            alert('Debe seleccionar un Tipo de Documento y tener un Folio válido.');
+            return;
         }
-        // Poblar modal
-        document.getElementById('modal-tipo-documento').textContent = tipo.toUpperCase();
+
+        payloadGbl = {
+            tipo_documento: tipoDoc,
+            folio: folioVal,
+            cliente_id: clienteExistenteSelect.value || null,
+            productos: venta.productos.map(p => ({ codigo: p.codigo, cantidad: p.cantidad })),
+            cliente_nuevo: null
+        };
+
+        if (venta.productos.length === 0) {
+            alert('No hay productos en la venta.');
+            return;
+        }
+
+        if (payloadGbl.tipo_documento === 'Factura' && !payloadGbl.cliente_id) {
+            const rut = rutInput.value;
+            const razonSocial = document.getElementById('id_razon_social').value;
+            
+            if (!rut || !razonSocial) {
+                alert('Para Factura, debe seleccionar un cliente existente o ingresar los datos de uno nuevo (RUT y Razón Social son obligatorios).');
+                return;
+            }
+            if (!validarRut(rut)) {
+                alert('El RUT ingresado no es válido. Formato esperado: 12345678-9');
+                return;
+            }
+
+            payloadGbl.cliente_nuevo = {
+                rut: rut,
+                razon_social: razonSocial,
+                giro: document.getElementById('id_giro').value,
+                direccion: document.getElementById('id_direccion').value
+            };
+        }
+
+        // --- Poblar el Modal ---
+        document.getElementById('modal-tipo-documento').textContent = tipoDoc.toUpperCase();
         document.getElementById('modal-folio').textContent = folioVal;
+
         const modalClienteDiv = document.getElementById('modal-datos-cliente');
         if (payloadGbl.tipo_documento === 'Factura') {
             let rut, razon, giro, dir;
             if (payloadGbl.cliente_id) {
                 const cliente = clientesData.find(c => c.id == payloadGbl.cliente_id);
-                rut = cliente?.rut || '';
-                razon = cliente?.razon_social || '';
-                giro = '';
-                dir = '';
+                rut = cliente.rut;
+                razon = cliente.razon_social;
+                giro = ""; 
+                dir = "";  
             } else {
-                rut = payloadGbl.cliente_nuevo.rut; razon = payloadGbl.cliente_nuevo.razon_social; giro = payloadGbl.cliente_nuevo.giro; dir = payloadGbl.cliente_nuevo.direccion;
+                rut = payloadGbl.cliente_nuevo.rut;
+                razon = payloadGbl.cliente_nuevo.razon_social;
+                giro = payloadGbl.cliente_nuevo.giro;
+                dir = payloadGbl.cliente_nuevo.direccion;
             }
             document.getElementById('modal-cliente-rut').textContent = rut;
             document.getElementById('modal-cliente-razon').textContent = razon;
             document.getElementById('modal-cliente-giro').textContent = giro;
             document.getElementById('modal-cliente-dir').textContent = dir;
             modalClienteDiv.style.display = 'block';
-        } else { modalClienteDiv.style.display = 'none'; }
-        const modalBodyProductos = document.getElementById('modal-body-productos'); modalBodyProductos.innerHTML = '';
-        venta.productos.forEach(p => { const tr = document.createElement('tr'); tr.innerHTML = `<td>${p.nombre}</td><td class="text-center">${p.cantidad}</td><td class="text-end">$${p.precio.toFixed(0)}</td><td class="text-end">$${p.subtotal.toFixed(0)}</td>`; modalBodyProductos.appendChild(tr); });
-        document.getElementById('modal-subtotal').textContent = resumenSubtotal.textContent; document.getElementById('modal-iva').textContent = resumenIva.textContent; document.getElementById('modal-total-final').textContent = resumenTotal.textContent;
+        } else {
+            modalClienteDiv.style.display = 'none';
+        }
+
+        const modalBodyProductos = document.getElementById('modal-body-productos');
+        modalBodyProductos.innerHTML = '';
+        venta.productos.forEach(p => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${p.nombre}</td>
+                <td class="text-center">${p.cantidad}</td>
+                <td class="text-end">$${p.precio.toFixed(0)}</td>
+                <td class="text-end">$${p.subtotal.toFixed(0)}</td>
+            `;
+            modalBodyProductos.appendChild(tr);
+        });
+
+        document.getElementById('modal-subtotal').textContent = resumenSubtotal.textContent;
+        document.getElementById('modal-iva').textContent = resumenIva.textContent;
+        document.getElementById('modal-total-final').textContent = resumenTotal.textContent;
+
         vistaPreviaModal.show();
     });
 
-    if (btnConfirmarVenta) btnConfirmarVenta.addEventListener('click', function() {
-        btnConfirmarVenta.disabled = true; btnConfirmarVenta.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Guardando...';
-        fetch("{% url 'crear_venta' %}", { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken }, body: JSON.stringify(payloadGbl) })
+    btnConfirmarVenta.addEventListener('click', function() {
+        btnConfirmarVenta.disabled = true;
+        btnConfirmarVenta.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Guardando...';
+
+        fetch("{% url 'crear_venta' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify(payloadGbl) // Usamos el payload global
+        })
         .then(response => response.json())
-        .then(data => { if (data.status === 'success') { window.location.href = "{% url 'home' %}"; } else { alert('Error al registrar la venta: ' + (data.message || 'Sin detalle')); btnConfirmarVenta.disabled = false; btnConfirmarVenta.innerHTML = '<i class="bi bi-check-circle me-2"></i> Confirmar y Guardar Venta'; vistaPreviaModal.hide(); } })
-        .catch(error => { console.error('Error:', error); alert('Ocurrió un error inesperado.'); btnConfirmarVenta.disabled = false; btnConfirmarVenta.innerHTML = '<i class="bi bi-check-circle me-2"></i> Confirmar y Guardar Venta'; vistaPreviaModal.hide(); });
+        .then(data => {
+            if (data.status === 'success') {
+                window.location.href = "{% url 'home' %}";
+            } else {
+                alert('Error al registrar la venta: ' + data.message);
+                btnConfirmarVenta.disabled = false;
+                btnConfirmarVenta.innerHTML = '<i class="bi bi-check-circle me-2"></i> Confirmar y Guardar Venta';
+                vistaPreviaModal.hide();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Ocurrió un error inesperado.');
+            btnConfirmarVenta.disabled = false;
+            btnConfirmarVenta.innerHTML = '<i class="bi bi-check-circle me-2"></i> Confirmar y Guardar Venta';
+            vistaPreviaModal.hide();
+        });
     });
 
-    // --- FUNCIONES AUXILIARES ---
+
+    // --- 8. FUNCIONES AUXILIARES ---
+
     function validarRut(rut) {
         if (!rut || typeof rut !== 'string') return false;
         rut = rut.replace(/\./g, '').replace('-', '');
-        const dv = rut.slice(-1).toLowerCase(); let cuerpo = rut.slice(0, -1);
-        if (isNaN(cuerpo)) return false; let suma = 0; let multiplo = 2;
-        for (let i = cuerpo.length - 1; i >= 0; i--) { suma += parseInt(cuerpo.charAt(i), 10) * multiplo; multiplo = multiplo === 7 ? 2 : multiplo + 1; }
-        const dvEsperadoNum = 11 - (suma % 11); let dvEsperado; if (dvEsperadoNum === 11) dvEsperado = '0'; else if (dvEsperadoNum === 10) dvEsperado = 'k'; else dvEsperado = dvEsperadoNum.toString(); return dvEsperado === dv;
+        const dv = rut.slice(-1).toLowerCase();
+        let cuerpo = rut.slice(0, -1);
+        if (isNaN(cuerpo)) return false; 
+        let suma = 0;
+        let multiplo = 2;
+        for (let i = cuerpo.length - 1; i >= 0; i--) {
+            suma += parseInt(cuerpo.charAt(i), 10) * multiplo;
+            multiplo = multiplo === 7 ? 2 : multiplo + 1;
+        }
+        const dvEsperadoNum = 11 - (suma % 11);
+        let dvEsperado;
+        if (dvEsperadoNum === 11) { dvEsperado = '0'; }
+        else if (dvEsperadoNum === 10) { dvEsperado = 'k'; }
+        else { dvEsperado = dvEsperadoNum.toString(); }
+        return dvEsperado === dv;
     }
-    function actualizarVisibilidadFormCliente() { const esFactura = (tipoDocumentoSelect && (tipoDocumentoSelect.value || tipoDocumentoSelect.options?.[tipoDocumentoSelect.selectedIndex]?.value)) === 'Factura'; const clienteSeleccionado = clienteExistenteSelect ? clienteExistenteSelect.value : ''; if (clienteNuevoWrapper) clienteNuevoWrapper.style.display = (esFactura && !clienteSeleccionado) ? 'block' : 'none'; }
+
+    function actualizarVisibilidadFormCliente() {
+        const esFactura = tipoDocumentoSelect.value === 'Factura';
+        const clienteSeleccionado = clienteExistenteSelect.value;
+        clienteNuevoWrapper.style.display = (esFactura && !clienteSeleccionado) ? 'block' : 'none';
+    }
+
     function actualizarVistaVenta() {
         listaProductosVenta.innerHTML = '';
-        if (venta.productos.length === 0) { listaProductosVenta.appendChild(listaVacia); resumenSubtotal.textContent = '$0'; resumenIva.textContent = '$0'; resumenTotal.textContent = '$0'; return; }
-        let subtotalGeneral = 0; venta.productos.forEach((p, index) => { subtotalGeneral += p.subtotal; const li = document.createElement('li'); li.className = 'list-group-item d-flex justify-content-between align-items-center'; li.innerHTML = `<div><small>${p.codigo}</small><br><strong>${p.nombre}</strong><br><small>${p.cantidad} x $${p.precio.toFixed(0)}</small></div><div><strong>$${p.subtotal.toFixed(0)}</strong><button type="button" class="btn btn-sm btn-outline-danger ms-2 btn-eliminar-item" data-index="${index}"><i class="bi bi-trash"></i></button></div>`; listaProductosVenta.appendChild(li); });
-        document.querySelectorAll('.btn-eliminar-item').forEach(btn => btn.addEventListener('click', function() { const index = parseInt(this.getAttribute('data-index')); venta.productos.splice(index, 1); actualizarVistaVenta(); }));
-        const iva = subtotalGeneral * 0.19; const total = subtotalGeneral + iva; resumenSubtotal.textContent = '$' + subtotalGeneral.toFixed(0); resumenIva.textContent = '$' + iva.toFixed(0); resumenTotal.textContent = '$' + total.toFixed(0);
+        if (venta.productos.length === 0) {
+            listaProductosVenta.appendChild(listaVacia);
+            resumenSubtotal.textContent = '$0';
+            resumenIva.textContent = '$0';
+            resumenTotal.textContent = '$0';
+            return;
+        }
+        let subtotalGeneral = 0;
+        venta.productos.forEach((p, index) => {
+            subtotalGeneral += p.subtotal;
+            const li = document.createElement('li');
+            li.className = 'list-group-item d-flex justify-content-between align-items-center';
+            li.innerHTML = `
+                <div>
+                    <small>${p.codigo}</small> <br>
+                    <strong>${p.nombre}</strong> <br>
+                    <small>${p.cantidad} x $${p.precio.toFixed(0)}</small>
+                </div>
+                <div>
+                    <strong>$${p.subtotal.toFixed(0)}</strong>
+                    <button type="button" class="btn btn-sm btn-outline-danger ms-2 btn-eliminar-item" data-index="${index}">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            `;
+            listaProductosVenta.appendChild(li);
+        });
+        document.querySelectorAll('.btn-eliminar-item').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const index = parseInt(this.getAttribute('data-index'));
+                venta.productos.splice(index, 1);
+                actualizarVistaVenta();
+            });
+        });
+        const iva = subtotalGeneral * 0.19;
+        const total = subtotalGeneral + iva;
+        resumenSubtotal.textContent = '$' + subtotalGeneral.toFixed(0);
+        resumenIva.textContent = '$' + iva.toFixed(0);
+        resumenTotal.textContent = '$' + total.toFixed(0);
     }
 
     // Estado inicial
-    actualizarVisibilidadFormCliente(); actualizarVistaVenta();
+    actualizarVisibilidadFormCliente();
+    actualizarVistaVenta();
 });
 </script>
-
- 
-    {% endblock %}
+{% endblock %}
