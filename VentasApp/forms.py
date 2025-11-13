@@ -72,9 +72,10 @@ class ClienteForm(forms.ModelForm):
 class VentaForm(forms.ModelForm):
     class Meta:
         model = Venta
-        fields = ['tipo_documento', 'id_cliente']
+        fields = ['tipo_documento', 'folio', 'id_cliente']
         widgets = {
             'tipo_documento': forms.Select(attrs={'class': 'form-select', 'id': 'tipo_documento'}),
+            'folio': forms.NumberInput(attrs={'class': 'form-control', 'id': 'folio', 'readonly': True}),
             'id_cliente': forms.Select(attrs={'class': 'form-select', 'id': 'id_cliente'}),
         }
 

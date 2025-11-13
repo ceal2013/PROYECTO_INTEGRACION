@@ -94,12 +94,16 @@ class Venta(models.Model):
     id_venta = models.AutoField(primary_key=True)
     fecha = models.DateTimeField(default=timezone.now)
     tipo_documento = models.CharField(max_length=20, choices=TIPO_CHOICES)
+    folio = models.IntegerField()
     subtotal = models.DecimalField(max_digits=10, decimal_places=2)
     iva = models.DecimalField(max_digits=10, decimal_places=2)
     total = models.DecimalField(max_digits=10, decimal_places=2)
     id_usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     id_cliente = models.ForeignKey(Cliente, on_delete=models.PROTECT, null=True, blank=True)
     id_control = models.ForeignKey(ControlDia, on_delete=models.PROTECT)
+
+    class Meta:
+        unique_together = ('tipo_documento', 'folio')
 
     def __str__(self):
         return f"Venta {self.id_venta}"

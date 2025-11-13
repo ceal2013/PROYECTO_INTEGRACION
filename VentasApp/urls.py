@@ -31,6 +31,7 @@ urlpatterns = [
 
 	# URLs para Ventas (Vendedor)
 	path('nueva_venta/', views.crear_venta, name='crear_venta'),
+	path('get_next_folio/', views.get_next_folio, name='get_next_folio'),
 
 	# URLs para Reportes (Jefe de Ventas)
 	path('reporte_diario/', views.reporte_diario, name='reporte_diario'),

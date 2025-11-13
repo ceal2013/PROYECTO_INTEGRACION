@@ -1,4 +1,5 @@
 {% extends 'base_layout.html' %}
+
 {% block content %}
 
 <div class="row">
@@ -12,6 +13,10 @@
                     <div class="col-md-6">
                         <label for="{{ venta_form.tipo_documento.id_for_label }}" class="form-label">Tipo de Documento</label>
                         {{ venta_form.tipo_documento }}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="folio" class="form-label">Folio</label>
+                        <input type="text" id="folio" class="form-control" readonly>
                     </div>
                     <div class="col-md-6" id="cliente-existente-wrapper" style="display: none;">
                         <label for="{{ venta_form.id_cliente.id_for_label }}" class="form-label">Cliente Existente</label>
@@ -30,6 +35,7 @@
                     <div class="col-md-6 mb-3">
                         <label for="{{ cliente_form.rut.id_for_label }}" class="form-label">RUT</label>
                         {{ cliente_form.rut }}
+                        <div id="rut-error" class="invalid-feedback" style="display: none;"></div>
                     </div>
                     <div class="col-md-6 mb-3">
                         <label for="{{ cliente_form.razon_social.id_for_label }}" class="form-label">Razón Social</label>
@@ -129,6 +135,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const productoInput = document.getElementById('producto-select');
     const cantidadInput = document.getElementById('producto-cantidad');
     const btnAgregarProducto = document.getElementById('btn-agregar-producto');
+    const folioInput = document.getElementById('folio');
+
+    // RUT validation elements
+    const rutInput = document.getElementById('id_rut');
+    const rutErrorDiv = document.getElementById('rut-error');
 
     const listaProductosVenta = document.getElementById('lista-productos-venta');
     const listaVacia = document.getElementById('lista-vacia');
@@ -139,7 +150,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     let venta = { productos: [] };
 
-    // Poblaciones
+    // --- POBLAR DATALISTS ---
     productosData.forEach(p => {
         const option = document.createElement('option');
         option.value = `${p.codigo} - ${p.nombre}`;
@@ -164,11 +175,47 @@ document.addEventListener('DOMContentLoaded', function() {
         if (clienteNuevoWrapper) clienteNuevoWrapper.style.display = (esFactura && !clienteSeleccionado) ? 'block' : 'none';
     }
 
-    if (tipoDocumentoSelect) tipoDocumentoSelect.addEventListener('change', actualizarVisibilidadFormCliente);
+    // --- Escuchar cambio de tipo_documento y solicitar folio ---
+    if (tipoDocumentoSelect) {
+        tipoDocumentoSelect.addEventListener('change', function() {
+            const tipo = this.value;
+            const productoElem = document.getElementById('producto-select');
+            const btnAgregar = document.getElementById('btn-agregar-producto');
+
+            if (tipo) {
+                if (folioInput) folioInput.value = 'Cargando...';
+                if (productoElem) productoElem.disabled = true;
+                if (btnAgregar) btnAgregar.disabled = true;
+                fetch(`{% url 'get_next_folio' %}?tipo_documento=${tipo}`)
+                    .then(r => r.json())
+                    .then(data => {
+                        if (folioInput) folioInput.value = data.next_folio;
+                        if (productoElem) productoElem.disabled = false;
+                        if (btnAgregar) btnAgregar.disabled = false;
+                    })
+                    .catch(err => {
+                        console.error('Error al obtener folio', err);
+                        if (folioInput) folioInput.value = '';
+                        if (productoElem) productoElem.disabled = false;
+                        if (btnAgregar) btnAgregar.disabled = false;
+                    });
+            } else {
+                if (folioInput) folioInput.value = '';
+                if (productoElem) productoElem.disabled = true;
+                if (btnAgregar) btnAgregar.disabled = true;
+            }
+
+            actualizarVisibilidadFormCliente();
+        });
+    }
+
     if (clienteExistenteSelect) clienteExistenteSelect.addEventListener('change', actualizarVisibilidadFormCliente);
+
     if (btnLimpiarCliente) btnLimpiarCliente.addEventListener('click', function() {
         if (clienteExistenteSelect) clienteExistenteSelect.value = '';
-        const ids = ['id_rut','id_razon_social','id_giro','id_direccion'];
+        if (rutInput) { rutInput.value = ''; rutInput.classList.remove('is-invalid'); }
+        if (rutErrorDiv) rutErrorDiv.style.display = 'none';
+        const ids = ['id_razon_social','id_giro','id_direccion'];
         ids.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
         actualizarVisibilidadFormCliente();
     });
@@ -196,28 +243,54 @@ document.addEventListener('DOMContentLoaded', function() {
         actualizarVistaVenta();
     });
 
+    // --- Validación RUT onblur ---
+    if (rutInput) {
+        rutInput.addEventListener('blur', function() {
+            const rut = (this.value || '').trim();
+            if (!rut) {
+                this.classList.remove('is-invalid');
+                if (rutErrorDiv) rutErrorDiv.style.display = 'none';
+                return;
+            }
+            if (!validarRut(rut)) {
+                this.classList.add('is-invalid');
+                if (rutErrorDiv) { rutErrorDiv.textContent = 'RUT no válido. Formato: 12345678-9'; rutErrorDiv.style.display = 'block'; }
+            } else {
+                this.classList.remove('is-invalid');
+                if (rutErrorDiv) rutErrorDiv.style.display = 'none';
+            }
+        });
+    }
+
     if (btnRegistrarVenta) btnRegistrarVenta.addEventListener('click', function() {
         const tipoVal = tipoDocumentoSelect ? (tipoDocumentoSelect.value || '') : '';
-        const payload = { tipo_documento: tipoVal, cliente_id: clienteExistenteSelect ? (clienteExistenteSelect.value || null) : null, productos: venta.productos.map(p => ({ codigo: p.codigo, cantidad: p.cantidad })), cliente_nuevo: null };
+        const payload = {
+            tipo_documento: tipoVal,
+            folio: folioInput ? folioInput.value : null,
+            cliente_id: clienteExistenteSelect ? (clienteExistenteSelect.value || null) : null,
+            productos: venta.productos.map(p => ({ codigo: p.codigo, cantidad: p.cantidad })),
+            cliente_nuevo: null
+        };
         if (venta.productos.length === 0) { alert('No hay productos en la venta.'); return; }
         if (payload.tipo_documento === 'Factura' && !payload.cliente_id) {
-            const rut = document.getElementById('id_rut') ? document.getElementById('id_rut').value : '';
+            const rut = rutInput ? (rutInput.value || '') : '';
             const razonSocial = document.getElementById('id_razon_social') ? document.getElementById('id_razon_social').value : '';
             if (!rut || !razonSocial) { alert('Para Factura, debe seleccionar un cliente existente o ingresar los datos de uno nuevo (RUT y Razón Social son obligatorios).'); return; }
+            if (!validarRut(rut)) { if (rutInput) rutInput.classList.add('is-invalid'); if (rutErrorDiv) { rutErrorDiv.textContent = 'RUT no válido. Formato: 12345678-9'; rutErrorDiv.style.display = 'block'; } alert('El RUT ingresado no es válido.'); return; }
             payload.cliente_nuevo = { rut: rut, razon_social: razonSocial, giro: document.getElementById('id_giro') ? document.getElementById('id_giro').value : '', direccion: document.getElementById('id_direccion') ? document.getElementById('id_direccion').value : '' };
         }
 
         btnRegistrarVenta.disabled = true;
-        const previousHtml = btnRegistrarVenta.innerHTML;
+        const prevHtml = btnRegistrarVenta.innerHTML;
         btnRegistrarVenta.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Registrando...';
 
         fetch("{% url 'crear_venta' %}", { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken }, body: JSON.stringify(payload) })
         .then(response => response.json())
         .then(data => {
             if (data.status === 'success') { window.location.href = "{% url 'home' %}"; }
-            else { alert('Error al registrar la venta: ' + (data.message || 'Sin detalle')); btnRegistrarVenta.disabled = false; btnRegistrarVenta.innerHTML = previousHtml; }
+            else { alert('Error al registrar la venta: ' + (data.message || 'Sin detalle')); btnRegistrarVenta.disabled = false; btnRegistrarVenta.innerHTML = prevHtml; }
         })
-        .catch(error => { console.error('Error:', error); alert('Ocurrió un error inesperado.'); btnRegistrarVenta.disabled = false; btnRegistrarVenta.innerHTML = previousHtml; });
+        .catch(error => { console.error('Error:', error); alert('Ocurrió un error inesperado.'); btnRegistrarVenta.disabled = false; btnRegistrarVenta.innerHTML = prevHtml; });
     });
 
     function actualizarVistaVenta() {
@@ -246,6 +319,27 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.btn-eliminar-item').forEach(btn => btn.addEventListener('click', function() { const index = parseInt(this.getAttribute('data-index')); venta.productos.splice(index, 1); actualizarVistaVenta(); }));
         const iva = subtotalGeneral * 0.19; const total = subtotalGeneral + iva;
         resumenSubtotal.textContent = '$' + subtotalGeneral.toFixed(0); resumenIva.textContent = '$' + iva.toFixed(0); resumenTotal.textContent = '$' + total.toFixed(0);
+    }
+
+    // --- Función validar RUT ---
+    function validarRut(rut) {
+        if (!rut || typeof rut !== 'string') return false;
+        rut = rut.replace(/\./g, '').replace('-', '');
+        const dv = rut.slice(-1).toLowerCase();
+        let cuerpo = rut.slice(0, -1);
+        if (isNaN(cuerpo)) return false;
+        let suma = 0;
+        let multiplo = 2;
+        for (let i = cuerpo.length - 1; i >= 0; i--) {
+            suma += parseInt(cuerpo.charAt(i), 10) * multiplo;
+            multiplo = multiplo === 7 ? 2 : multiplo + 1;
+        }
+        const dvEsperadoNum = 11 - (suma % 11);
+        let dvEsperado;
+        if (dvEsperadoNum === 11) dvEsperado = '0';
+        else if (dvEsperadoNum === 10) dvEsperado = 'k';
+        else dvEsperado = dvEsperadoNum.toString();
+        return dvEsperado === dv;
     }
 
     actualizarVisibilidadFormCliente(); actualizarVistaVenta();

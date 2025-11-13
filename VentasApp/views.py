@@ -5,7 +5,7 @@ from datetime import date, datetime
 from django.utils import timezone
 from django.db import transaction
 from django.http import JsonResponse
-from django.db.models import Sum, Count, F, DecimalField
+from django.db.models import Sum, Count, F, DecimalField, Max
 from decimal import Decimal
 import json
 
@@ -286,6 +286,17 @@ def crear_venta(request):
 		try:
 			data = json.loads(request.body)
 			tipo_documento = data.get('tipo_documento')
+			folio_num = data.get('folio')
+			# Intentar normalizar folio a entero; si no viene, calcular siguiente folio
+			if folio_num is not None:
+				try:
+					folio_num = int(folio_num)
+				except (ValueError, TypeError):
+					return JsonResponse({'status': 'error', 'message': 'Folio inválido.'}, status=400)
+			else:
+				# Calcular siguiente folio de forma segura
+				max_folio_q = Venta.objects.filter(tipo_documento=tipo_documento).aggregate(max_folio=Max('folio'))
+				folio_num = (max_folio_q['max_folio'] or 0) + 1
 			cliente_id = data.get('cliente_id')
 			cliente_nuevo = data.get('cliente_nuevo')
 			productos_data = data.get('productos')
@@ -328,6 +339,7 @@ def crear_venta(request):
 			# 5. Guardar la Venta
 			venta = Venta.objects.create(
 				tipo_documento=tipo_documento,
+				folio=folio_num,
 				subtotal=subtotal_venta.quantize(Decimal('0.00')),
 				iva=iva,
 				total=total.quantize(Decimal('0.00')),
@@ -417,3 +429,15 @@ def reporte_diario(request):
 	}
 
 	return render(request, 'reportes/reporte_diario.html', context)
+
+
+def get_next_folio(request):
+	tipo_documento = request.GET.get('tipo_documento')
+	if not tipo_documento:
+		return JsonResponse({'error': 'Falta tipo de documento'}, status=400)
+
+	# Busca el folio máximo para ese tipo de documento
+	max_folio = Venta.objects.filter(tipo_documento=tipo_documento).aggregate(max_folio=Max('folio'))
+	next_folio = (max_folio['max_folio'] or 0) + 1
+
+	return JsonResponse({'next_folio': next_folio})
