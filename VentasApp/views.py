@@ -2,10 +2,14 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.hashers import check_password
 from datetime import date
+from django.db import transaction
+from django.http import JsonResponse
+from decimal import Decimal
+import json
 
-from .forms import LoginForm, ProductoForm, ClienteForm, UsuarioForm
+from .forms import LoginForm, ProductoForm, ClienteForm, UsuarioForm, VentaForm, DetalleVentaForm
 from django import forms
-from .models import Usuario, Producto, Cliente, ControlDia
+from .models import Usuario, Producto, Cliente, ControlDia, Venta, DetalleVenta
 from .decorators import custom_login_required, role_required
 
 
@@ -228,3 +232,105 @@ def control_dia(request):
 		control_hoy.save()
 		return redirect('control_dia')
 	return render(request, 'control/control_dia.html', {'control_hoy': control_hoy})
+
+
+# --- VISTA DE REGISTRO DE VENTAS (Vendedor) ---
+@custom_login_required
+@role_required(allowed_roles=['Vendedor', 'Jefe de Ventas'])
+@transaction.atomic  # Asegura que toda la venta se guarde correctamente
+def crear_venta(request):
+	# 1. Verificar si el día está abierto
+	try:
+		control_hoy = ControlDia.objects.get(fecha=date.today())
+		if control_hoy.estado == 'Cerrado':
+			messages.error(request, 'El día está CERRADO. No se pueden registrar nuevas ventas.')
+			return redirect('home')
+	except ControlDia.DoesNotExist:
+		messages.error(request, 'No se ha abierto el día. Contacte al Jefe de Ventas.')
+		return redirect('home')
+	if request.method == 'POST':
+		# 2. Procesar el POST (enviado por JavaScript/Fetch)
+		try:
+			data = json.loads(request.body)
+			tipo_documento = data.get('tipo_documento')
+			cliente_id = data.get('cliente_id')
+			cliente_nuevo = data.get('cliente_nuevo')
+			productos_data = data.get('productos')
+			# 3. Validar Cliente (si es Factura)
+			cliente_obj = None
+			if tipo_documento == 'Factura':
+				if cliente_id:
+					cliente_obj = Cliente.objects.get(id=cliente_id)
+				elif cliente_nuevo:
+					cliente_form = ClienteForm(cliente_nuevo)
+					if cliente_form.is_valid():
+						cliente_obj = cliente_form.save()
+					else:
+						return JsonResponse({'status': 'error', 'message': 'Datos del cliente inválidos.'}, status=400)
+				else:
+					return JsonResponse({'status': 'error', 'message': 'Para Factura, debe seleccionar un cliente.'}, status=400)
+			# 4. Calcular totales
+			subtotal_venta = Decimal('0.00')
+			detalles_venta = []
+			if not productos_data:
+				return JsonResponse({'status': 'error', 'message': 'No hay productos en la venta.'}, status=400)
+			for item in productos_data:
+				producto = Producto.objects.get(codigo=item['codigo'])
+				cantidad = int(item['cantidad'])
+				precio_unitario = Decimal(producto.precio_unitario)
+				subtotal_item = precio_unitario * cantidad
+
+				if producto.stock < cantidad:
+					return JsonResponse({'status': 'error', 'message': f'Stock insuficiente para {producto.nombre}.'}, status=400)
+
+				detalles_venta.append({
+					'producto': producto,
+					'cantidad': cantidad,
+					'precio_unitario': precio_unitario,
+					'subtotal': subtotal_item
+				})
+				subtotal_venta += subtotal_item
+			iva = (subtotal_venta * Decimal('0.19')).quantize(Decimal('0.00'))
+			total = subtotal_venta + iva
+			# 5. Guardar la Venta
+			venta = Venta.objects.create(
+				tipo_documento=tipo_documento,
+				subtotal=subtotal_venta.quantize(Decimal('0.00')),
+				iva=iva,
+				total=total.quantize(Decimal('0.00')),
+				id_usuario_id=request.session.get('usuario_id'),
+				id_cliente=cliente_obj,
+				id_control=control_hoy
+			)
+			# 6. Guardar Detalles de Venta y actualizar Stock
+			for detalle in detalles_venta:
+				DetalleVenta.objects.create(
+					id_venta=venta,
+					id_producto=detalle['producto'],
+					cantidad=detalle['cantidad'],
+					precio_unitario=detalle['precio_unitario'],
+					subtotal=detalle['subtotal']
+				)
+				producto_obj = detalle['producto']
+				producto_obj.stock -= detalle['cantidad']
+				producto_obj.save()
+			messages.success(request, 'Venta registrada exitosamente.')
+			return JsonResponse({'status': 'success', 'message': 'Venta registrada.'})
+		except Exception as e:
+			return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+	else:
+		# 7. Preparar el GET
+		venta_form = VentaForm()
+		cliente_form = ClienteForm()
+		detalle_form = DetalleVentaForm()
+
+		productos = list(Producto.objects.filter(stock__gt=0).values('codigo', 'nombre', 'precio_unitario', 'stock'))
+		clientes = list(Cliente.objects.values('id', 'rut', 'razon_social'))
+		context = {
+			'venta_form': venta_form,
+			'cliente_form': cliente_form,
+			'detalle_form': detalle_form,
+			'productos_json': json.dumps(productos),
+			'clientes_json': json.dumps(clientes),
+		}
+		return render(request, 'ventas/crear_venta.html', context)

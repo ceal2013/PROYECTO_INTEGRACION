@@ -1,0 +1,255 @@
+{% extends 'base_layout.html' %}
+{% block content %}
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">1. Detalles del Documento</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <label for="{{ venta_form.tipo_documento.id_for_label }}" class="form-label">Tipo de Documento</label>
+                        {{ venta_form.tipo_documento }}
+                    </div>
+                    <div class="col-md-6" id="cliente-existente-wrapper" style="display: none;">
+                        <label for="{{ venta_form.id_cliente.id_for_label }}" class="form-label">Cliente Existente</label>
+                        {{ venta_form.id_cliente }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4" id="cliente-nuevo-wrapper" style="display: none;">
+            <div class="card-header">
+                <h5 class="mb-0">Datos del Cliente (Factura)</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ cliente_form.rut.id_for_label }}" class="form-label">RUT</label>
+                        {{ cliente_form.rut }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ cliente_form.razon_social.id_for_label }}" class="form-label">Razón Social</label>
+                        {{ cliente_form.razon_social }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ cliente_form.giro.id_for_label }}" class="form-label">Giro</label>
+                        {{ cliente_form.giro }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ cliente_form.direccion.id_for_label }}" class="form-label">Dirección</label>
+                        {{ cliente_form.direccion }}
+                    </div>
+                </div>
+                <button type="button" id="btn-limpiar-cliente" class="btn btn-sm btn-outline-secondary">Limpiar Formulario</button>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">2. Productos</h5>
+            </div>
+            <div class="card-body">
+                <div class="row align-items-end">
+                    <div class="col-md-6">
+                        <label for="producto-select" class="form-label">Buscar Producto (por nombre o código)</label>
+                        <input class="form-control" id="producto-select" list="producto-list" placeholder="Escribe para buscar...">
+                        <datalist id="producto-list"></datalist>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="producto-cantidad" class="form-label">Cantidad</label>
+                        <input type="number" id="producto-cantidad" class="form-control" value="1" min="1">
+                    </div>
+                    <div class="col-md-3">
+                        <button type="button" id="btn-agregar-producto" class="btn btn-primary w-100">Agregar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card sticky-top" style="top: 20px;">
+            <div class="card-header">
+                <h5 class="mb-0">3. Resumen de Venta</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush" id="lista-productos-venta">
+                    <li class="list-group-item text-center text-muted" id="lista-vacia">No hay productos agregados.</li>
+                </ul>
+            </div>
+            <div class="card-footer">
+                <h5 class="d-flex justify-content-between">
+                    <span>Subtotal:</span>
+                    <span id="resumen-subtotal">$0</span>
+                </h5>
+                <h5 class="d-flex justify-content-between">
+                    <span>IVA (19%):</span>
+                    <span id="resumen-iva">$0</span>
+                </h5>
+                <hr>
+                <h3 class="d-flex justify-content-between">
+                    <strong>Total:</strong>
+                    <strong id="resumen-total">$0</strong>
+                </h3>
+                <button type="button" id="btn-registrar-venta" class="btn btn-success btn-lg w-100 mt-3">
+                    <i class="bi bi-check-circle me-2"></i> Registrar Venta
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{ productos_json|json_script:"productos-data" }}
+{{ clientes_json|json_script:"clientes-data" }}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // --- 1. OBTENER DATOS ---
+    const productosData = JSON.parse(document.getElementById('productos-data').textContent || '[]');
+    const clientesData = JSON.parse(document.getElementById('clientes-data').textContent || '[]');
+
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+    const csrfToken = getCookie('csrftoken') || '{{ csrf_token }}';
+
+    // --- 2. ELEMENTOS DEL DOM ---
+    const tipoDocumentoSelect = document.getElementById('tipo_documento') || document.getElementById('id_tipo_documento') || document.querySelector('[name="tipo_documento"]');
+    const clienteExistenteWrapper = document.getElementById('cliente-existente-wrapper');
+    const clienteExistenteSelect = document.getElementById('id_cliente') || document.querySelector('[name="id_cliente"]');
+    const clienteNuevoWrapper = document.getElementById('cliente-nuevo-wrapper');
+    const btnLimpiarCliente = document.getElementById('btn-limpiar-cliente');
+    const productoDatalist = document.getElementById('producto-list');
+    const productoInput = document.getElementById('producto-select');
+    const cantidadInput = document.getElementById('producto-cantidad');
+    const btnAgregarProducto = document.getElementById('btn-agregar-producto');
+
+    const listaProductosVenta = document.getElementById('lista-productos-venta');
+    const listaVacia = document.getElementById('lista-vacia');
+    const resumenSubtotal = document.getElementById('resumen-subtotal');
+    const resumenIva = document.getElementById('resumen-iva');
+    const resumenTotal = document.getElementById('resumen-total');
+    const btnRegistrarVenta = document.getElementById('btn-registrar-venta');
+
+    let venta = { productos: [] };
+
+    // Poblaciones
+    productosData.forEach(p => {
+        const option = document.createElement('option');
+        option.value = `${p.codigo} - ${p.nombre}`;
+        productoDatalist.appendChild(option);
+    });
+
+    if (clienteExistenteSelect) {
+        clienteExistenteSelect.innerHTML = '<option value="">Seleccione un cliente...</option>';
+        clientesData.forEach(c => {
+            const option = document.createElement('option');
+            option.value = c.id;
+            option.textContent = `${c.rut} - ${c.razon_social}`;
+            clienteExistenteSelect.appendChild(option);
+        });
+    }
+
+    function actualizarVisibilidadFormCliente() {
+        const tipoVal = tipoDocumentoSelect ? (tipoDocumentoSelect.value || tipoDocumentoSelect.options?.[tipoDocumentoSelect.selectedIndex]?.value) : '';
+        const esFactura = tipoVal === 'Factura';
+        const clienteSeleccionado = clienteExistenteSelect ? clienteExistenteSelect.value : '';
+        if (clienteExistenteWrapper) clienteExistenteWrapper.style.display = esFactura ? 'block' : 'none';
+        if (clienteNuevoWrapper) clienteNuevoWrapper.style.display = (esFactura && !clienteSeleccionado) ? 'block' : 'none';
+    }
+
+    if (tipoDocumentoSelect) tipoDocumentoSelect.addEventListener('change', actualizarVisibilidadFormCliente);
+    if (clienteExistenteSelect) clienteExistenteSelect.addEventListener('change', actualizarVisibilidadFormCliente);
+    if (btnLimpiarCliente) btnLimpiarCliente.addEventListener('click', function() {
+        if (clienteExistenteSelect) clienteExistenteSelect.value = '';
+        const ids = ['id_rut','id_razon_social','id_giro','id_direccion'];
+        ids.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+        actualizarVisibilidadFormCliente();
+    });
+
+    if (btnAgregarProducto) btnAgregarProducto.addEventListener('click', function() {
+        const valor = (productoInput && productoInput.value) ? productoInput.value : '';
+        const [codigo, ...nombreArr] = valor.split(' - ');
+        const cantidad = parseInt(cantidadInput ? cantidadInput.value : 0) || 0;
+        const producto = productosData.find(p => p.codigo === (codigo || '').trim());
+        if (!producto) { alert('Producto no válido. Selecciónelo de la lista.'); return; }
+        if (isNaN(cantidad) || cantidad <= 0) { alert('Ingrese una cantidad válida.'); return; }
+        if (producto.stock < cantidad) { alert(`Stock insuficiente. Solo quedan ${producto.stock} unidades de ${producto.nombre}.`); return; }
+
+        const itemExistente = venta.productos.find(p => p.codigo === producto.codigo);
+        if (itemExistente) {
+            const nuevaCantidad = itemExistente.cantidad + cantidad;
+            if (producto.stock < nuevaCantidad) { alert(`Stock insuficiente. Ya tiene ${itemExistente.cantidad} y solo quedan ${producto.stock} en total.`); return; }
+            itemExistente.cantidad = nuevaCantidad;
+            itemExistente.subtotal = itemExistente.precio * nuevaCantidad;
+        } else {
+            venta.productos.push({ codigo: producto.codigo, nombre: producto.nombre, cantidad: cantidad, precio: parseFloat(producto.precio_unitario), subtotal: parseFloat(producto.precio_unitario) * cantidad });
+        }
+        if (productoInput) productoInput.value = '';
+        if (cantidadInput) cantidadInput.value = '1';
+        actualizarVistaVenta();
+    });
+
+    if (btnRegistrarVenta) btnRegistrarVenta.addEventListener('click', function() {
+        const tipoVal = tipoDocumentoSelect ? (tipoDocumentoSelect.value || '') : '';
+        const payload = { tipo_documento: tipoVal, cliente_id: clienteExistenteSelect ? (clienteExistenteSelect.value || null) : null, productos: venta.productos.map(p => ({ codigo: p.codigo, cantidad: p.cantidad })), cliente_nuevo: null };
+        if (venta.productos.length === 0) { alert('No hay productos en la venta.'); return; }
+        if (payload.tipo_documento === 'Factura' && !payload.cliente_id) {
+            const rut = document.getElementById('id_rut') ? document.getElementById('id_rut').value : '';
+            const razonSocial = document.getElementById('id_razon_social') ? document.getElementById('id_razon_social').value : '';
+            if (!rut || !razonSocial) { alert('Para Factura, debe seleccionar un cliente existente o ingresar los datos de uno nuevo (RUT y Razón Social son obligatorios).'); return; }
+            payload.cliente_nuevo = { rut: rut, razon_social: razonSocial, giro: document.getElementById('id_giro') ? document.getElementById('id_giro').value : '', direccion: document.getElementById('id_direccion') ? document.getElementById('id_direccion').value : '' };
+        }
+
+        btnRegistrarVenta.disabled = true;
+        const previousHtml = btnRegistrarVenta.innerHTML;
+        btnRegistrarVenta.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Registrando...';
+
+        fetch("{% url 'crear_venta' %}", { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken }, body: JSON.stringify(payload) })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') { window.location.href = "{% url 'home' %}"; }
+            else { alert('Error al registrar la venta: ' + (data.message || 'Sin detalle')); btnRegistrarVenta.disabled = false; btnRegistrarVenta.innerHTML = previousHtml; }
+        })
+        .catch(error => { console.error('Error:', error); alert('Ocurrió un error inesperado.'); btnRegistrarVenta.disabled = false; btnRegistrarVenta.innerHTML = previousHtml; });
+    });
+
+    function actualizarVistaVenta() {
+        listaProductosVenta.innerHTML = '';
+        if (venta.productos.length === 0) { listaProductosVenta.appendChild(listaVacia); resumenSubtotal.textContent = '$0'; resumenIva.textContent = '$0'; resumenTotal.textContent = '$0'; return; }
+        let subtotalGeneral = 0;
+        venta.productos.forEach((p, index) => {
+            subtotalGeneral += p.subtotal;
+            const li = document.createElement('li');
+            li.className = 'list-group-item d-flex justify-content-between align-items-center';
+            li.innerHTML = `
+                <div>
+                    <small>${p.codigo}</small> <br>
+                    <strong>${p.nombre}</strong> <br>
+                    <small>${p.cantidad} x $${p.precio.toFixed(0)}</small>
+                </div>
+                <div>
+                    <strong>$${p.subtotal.toFixed(0)}</strong>
+                    <button type="button" class="btn btn-sm btn-outline-danger ms-2 btn-eliminar-item" data-index="${index}">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            `;
+            listaProductosVenta.appendChild(li);
+        });
+        document.querySelectorAll('.btn-eliminar-item').forEach(btn => btn.addEventListener('click', function() { const index = parseInt(this.getAttribute('data-index')); venta.productos.splice(index, 1); actualizarVistaVenta(); }));
+        const iva = subtotalGeneral * 0.19; const total = subtotalGeneral + iva;
+        resumenSubtotal.textContent = '$' + subtotalGeneral.toFixed(0); resumenIva.textContent = '$' + iva.toFixed(0); resumenTotal.textContent = '$' + total.toFixed(0);
+    }
+
+    actualizarVisibilidadFormCliente(); actualizarVistaVenta();
+});
+</script>
+
+{% endblock %}
