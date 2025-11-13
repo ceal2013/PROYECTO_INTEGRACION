@@ -1,3 +1,4 @@
+import re
 from django import forms
 from .models import Usuario, Producto, Cliente, Venta, DetalleVenta  # Importamos modelos usados en formularios
 
@@ -64,9 +65,57 @@ class ClienteForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Añadir clases de Bootstrap a todos los campos
         for field in self.fields:
             self.fields[field].widget.attrs.update({'class': 'form-control'})
+
+    def _validar_rut(self, rut_limpio):
+        # Función de validación (Módulo 11)
+        try:
+            dv = rut_limpio[-1].lower()
+            cuerpo = rut_limpio[:-1]
+            if not cuerpo.isdigit():
+                return False
+            suma = 0
+            multiplo = 2
+            for i in reversed(cuerpo):
+                suma += int(i) * multiplo
+                multiplo = multiplo + 1 if multiplo < 7 else 2
+            
+            dv_esperado_num = 11 - (suma % 11)
+            
+            if dv_esperado_num == 11:
+                dv_esperado = '0'
+            elif dv_esperado_num == 10:
+                dv_esperado = 'k'
+            else:
+                dv_esperado = str(dv_esperado_num)
+            
+            return dv == dv_esperado
+        except Exception:
+            return False
+
+    def clean_rut(self):
+        rut = self.cleaned_data.get('rut')
+        if not rut:
+            raise forms.ValidationError("El RUT es obligatorio.")
+        # 1. Limpiar el RUT de puntos y guiones
+        rut_limpio = re.sub(r'[^0-9kK]+', '', str(rut)).lower()
+        
+        # 2. Validar
+        if not self._validar_rut(rut_limpio):
+            raise forms.ValidationError("El RUT ingresado no es válido.")
+        # 3. Formatear (Normalizar) para guardar
+        dv = rut_limpio[-1].upper()
+        cuerpo = rut_limpio[:-1]
+        
+        # Formatear cuerpo con puntos (Ej: 12345678 -> 12.345.678)
+        cuerpo_formateado = ""
+        while len(cuerpo) > 3:
+            cuerpo_formateado = "." + cuerpo[-3:] + cuerpo_formateado
+            cuerpo = cuerpo[:-3]
+        cuerpo_formateado = cuerpo + cuerpo_formateado
+        
+        return f"{cuerpo_formateado}-{dv}"
 
 
 class VentaForm(forms.ModelForm):
