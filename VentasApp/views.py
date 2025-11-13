@@ -1,9 +1,11 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.hashers import check_password
-from datetime import date
+from datetime import date, datetime
+from django.utils import timezone
 from django.db import transaction
 from django.http import JsonResponse
+from django.db.models import Sum, Count, F, DecimalField
 from decimal import Decimal
 import json
 
@@ -43,7 +45,38 @@ def user_logout(request):
 
 @custom_login_required
 def home(request):
-	return render(request, 'home.html')
+	rol = request.session.get('rol')
+	context = {}
+
+	# 1. Intentar obtener el control del día
+	try:
+		control_hoy = ControlDia.objects.get(fecha=date.today())
+	except ControlDia.DoesNotExist:
+		control_hoy = None
+
+	# 2. Lógica para VENDEDOR
+	if rol == 'Vendedor':
+		if control_hoy and control_hoy.estado == 'Abierto':
+			return redirect('crear_venta')
+		else:
+			messages.warning(request, 'El día está CERRADO. No se pueden registrar nuevas ventas.')
+			context['dia_cerrado'] = True
+
+	# 3. Lógica para JEFE DE VENTAS
+	if rol == 'Jefe de Ventas':
+		context['control_hoy'] = control_hoy
+		# Calcular total recaudado hoy
+		hoy = timezone.now().date()
+		start_of_day = datetime.combine(hoy, datetime.min.time())
+		end_of_day = datetime.combine(hoy, datetime.max.time())
+		aware_start_of_day = timezone.make_aware(start_of_day)
+		aware_end_of_day = timezone.make_aware(end_of_day)
+		ventas_hoy = Venta.objects.filter(fecha__range=(aware_start_of_day, aware_end_of_day))
+		total_hoy = ventas_hoy.aggregate(total_recaudado=Sum('total'))
+		context['total_recaudado_hoy'] = total_hoy.get('total_recaudado') or Decimal('0.00')
+
+	# 4. Renderizar el dashboard
+	return render(request, 'home.html', context)
 
 
 # --- CRUD de Productos (Solo Jefe de Ventas) ---
@@ -336,3 +369,51 @@ def crear_venta(request):
 			'clientes_json': clientes,
 		}
 		return render(request, 'ventas/crear_venta.html', context)
+
+
+# --- VISTA DE REPORTE DIARIO (Jefe de Ventas) ---
+@custom_login_required
+@role_required(allowed_roles=['Jefe de Ventas'])
+def reporte_diario(request):
+	fecha_str = request.GET.get('fecha')
+	if fecha_str:
+		try:
+			fecha_reporte = date.fromisoformat(fecha_str)
+		except ValueError:
+			fecha_reporte = timezone.now().date()
+			messages.error(request, 'Formato de fecha inválido. Mostrando reporte de hoy.')
+	else:
+		fecha_reporte = timezone.now().date()
+
+	start_of_day = datetime.combine(fecha_reporte, datetime.min.time())
+	end_of_day = datetime.combine(fecha_reporte, datetime.max.time())
+	aware_start_of_day = timezone.make_aware(start_of_day)
+	aware_end_of_day = timezone.make_aware(end_of_day)
+
+	ventas_dia = Venta.objects.filter(fecha__range=(aware_start_of_day, aware_end_of_day))
+
+	total_por_documento = ventas_dia.values('tipo_documento').annotate(
+		cantidad=Count('id_venta'),
+		total=Sum('total')
+	).order_by('tipo_documento')
+
+	total_por_vendedor = ventas_dia.values('id_usuario__username').annotate(
+		cantidad=Count('id_venta'),
+		total=Sum('total')
+	).order_by('id_usuario__username')
+
+	totales_generales = ventas_dia.aggregate(
+		total_neto=Sum('subtotal'),
+		total_iva=Sum('iva'),
+		total_recaudado=Sum('total'),
+		cantidad_ventas=Count('id_venta')
+	)
+
+	context = {
+		'fecha_reporte': fecha_reporte,
+		'total_por_documento': total_por_documento,
+		'total_por_vendedor': total_por_vendedor,
+		'totales_generales': totales_generales,
+	}
+
+	return render(request, 'reportes/reporte_diario.html', context)

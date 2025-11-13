@@ -1,0 +1,126 @@
+{% extends 'base_layout.html' %}
+{% block content %}
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" action="{% url 'reporte_diario' %}" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label for="fecha" class="form-label">Seleccionar Fecha del Reporte</label>
+                <input type="date" class="form-control" id="fecha" name="fecha" value="{{ fecha_reporte|date:'Y-m-d' }}">
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-search me-2"></i>Filtrar
+                </button>
+                <a href="{% url 'reporte_diario' %}" class="btn btn-secondary ms-2">Ver Hoy</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="card-title">Reporte de Ventas</h2>
+    <h4 class="text-muted">Fecha: {{ fecha_reporte|date:"d/m/Y" }}</h4>
+</div>
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="card text-white bg-success mb-3">
+            <div class="card-header">Total Recaudado</div>
+            <div class="card-body">
+                <h3 class="card-title text-white">${{ totales_generales.total_recaudado|default:0|floatformat:0 }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-light mb-3">
+            <div class="card-header">Total Neto (Sin IVA)</div>
+            <div class="card-body">
+                <h3 class="card-title">${{ totales_generales.total_neto|default:0|floatformat:0 }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-light mb-3">
+            <div class="card-header">Total IVA</div>
+            <div class="card-body">
+                <h3 class="card-title">${{ totales_generales.total_iva|default:0|floatformat:0 }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-light mb-3">
+            <div class="card-header">Cantidad de Ventas</div>
+            <div class="card-body">
+                <h3 class="card-title">{{ totales_generales.cantidad_ventas|default:0 }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Desglose por Tipo de Documento</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Tipo</th>
+                            <th>Cantidad</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for doc in total_por_documento %}
+                        <tr>
+                            <td><strong>{{ doc.tipo_documento }}</strong></td>
+                            <td>{{ doc.cantidad }}</td>
+                            <td>${{ doc.total|floatformat:0 }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center">Sin ventas para esta fecha.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Desglose por Vendedor</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Vendedor</th>
+                            <th>Cantidad</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for vend in total_por_vendedor %}
+                        <tr>
+                            <td><strong>{{ vend.id_usuario__username }}</strong></td>
+                            <td>{{ vend.cantidad }}</td>
+                            <td>${{ vend.total|floatformat:0 }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center">Sin ventas para esta fecha.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
