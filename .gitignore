@@ -1,0 +1,12 @@
+# Archivos de entorno y seguridad
+.env
+venv/
+env/
+
+# Archivos basura de Python
+__pycache__/
+*.pyc
+
+# Archivos de sistema y editor
+.DS_Store
+.vscode/
