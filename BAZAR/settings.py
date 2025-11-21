@@ -1,5 +1,5 @@
 """
-Django settings for DuermeBien project.
+Django settings for Bazar "El Sol" project.
 """
 
 from pathlib import Path
