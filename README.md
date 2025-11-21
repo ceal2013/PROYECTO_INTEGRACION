@@ -17,7 +17,7 @@ Este proyecto es una aplicación web desarrollada en Django con base de datos My
 PASO 1: CLONAR EL REPOSITORIO
 Abre una terminal o usa VS Code para descargar el código.
 
-   git clone [Proyecto Bazar](https://github.com/ceal2013/PROYECTO_INTEGRACION.git)
+   git clone https://github.com/ceal2013/PROYECTO_INTEGRACION.git
 
 
 PASO 2: CREAR EL ENTORNO VIRTUAL
