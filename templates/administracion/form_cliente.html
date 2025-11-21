@@ -1,39 +1,50 @@
 {% extends 'base_layout.html' %}
+
 {% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">{{ accion }} Cliente</h3>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label class="form-label">RUT</label>
+                            {{ form.rut }}
+                            {{ form.rut.errors }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Razón Social</label>
+                            {{ form.razon_social }}
+                            {{ form.razon_social.errors }}
+                        </div>
 
-                <form method="post">
-                    {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">Giro</label>
+                            {{ form.giro }}
+                            {{ form.giro.errors }}
+                        </div>
 
-                    <div class="mb-3">
-                        <label for="{{ form.rut.id_for_label }}" class="form-label">RUT</label>
-                        {{ form.rut }}
-                        {{ form.rut.errors }}
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="{{ form.razon_social.id_for_label }}" class="form-label">Razón Social</label>
-                        {{ form.razon_social }}
-                        {{ form.razon_social.errors }}
-                    </div>
-                    <div class="mb-3">
-                        <label for="{{ form.giro.id_for_label }}" class="form-label">Giro</label>
-                        {{ form.giro }}
-                        {{ form.giro.errors }}
-                    </div>
-                    <div class="mb-3">
-                        <label for="{{ form.direccion.id_for_label }}" class="form-label">Dirección</label>
-                        {{ form.direccion }}
-                        {{ form.direccion.errors }}
-                    </div>
-                    <hr>
-                    <div class="d-flex justify-content-end">
-                        <a href="{% url 'listar_clientes' %}" class="btn btn-secondary me-2">Cancelar</a>
-                        <button type="submit" class="btn btn-success">{{ accion }}</button>
-                    </div>
-                </form>
+                        <div class="mb-3">
+                            <label class="form-label">Dirección</label>
+                            {{ form.direccion }}
+                            {{ form.direccion.errors }}
+                        </div>
+
+                        <hr>
+                        <div class="d-flex justify-content-end">
+                            <a href="{% url 'listar_clientes' %}" class="btn btn-secondary me-2">Cancelar</a>
+                            <button type="submit" class="btn btn-success">{{ accion }}</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
 </div>
-
 {% endblock %}
