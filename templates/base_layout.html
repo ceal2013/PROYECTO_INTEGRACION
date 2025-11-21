@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <link rel="icon" href="/static/iconobazar.png" type="image/png">
-    <title>Proyecto Bazar - Panel Principal</title>
+    <title>Proyecto Bazar</title>
     <style>
         body { background-color: #f4f4f4; }
         .navbar { background-color: #198754; } 
@@ -24,7 +24,7 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="{% url 'home' %}">Bazar</a>
+        <a class="navbar-brand" href="{% url 'home' %}">Bazar "El Sol"</a>
         {% if request.session.usuario_id %}
             <div class="ms-auto d-flex align-items-center">
                 <p class="mb-0 text-white me-3">Usuario: <strong>{{ request.session.username }}</strong> ({{ request.session.rol }})</p>
