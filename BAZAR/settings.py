@@ -4,9 +4,9 @@ Django settings for Bazar "El Sol" project.
 
 from pathlib import Path
 import os
-from dotenv import load_dotenv  # <--- NUEVO: Importar dotenv
+from dotenv import load_dotenv
 
-# <--- NUEVO: Cargar variables del .env
+# Cargar variables del .env (aunque ahora usaremos credenciales directas para AWS)
 load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -15,14 +15,15 @@ TEMPLATES_DIR = BASE_DIR / 'templates'
 STATIC_DIR = BASE_DIR / 'static'
 
 # SECURITY WARNING: keep the secret key used in production secret!
-# <--- CAMBIO: Ahora lee del archivo .env
-SECRET_KEY = os.getenv('SECRET_KEY')
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-clave-por-defecto-para-aws')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# <--- CAMBIO: Convierte el texto 'True' del .env a booleano real
-DEBUG = os.getenv('DEBUG') == 'True'
+# Forzamos True para la demo si el env falla
+DEBUG = True 
 
-ALLOWED_HOSTS = []
+# CAMBIO PARA AWS: Permitir cualquier IP
+ALLOWED_HOSTS = ['*']
+
 
 # Application definition
 INSTALLED_APPS = [
@@ -65,18 +66,35 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'BAZAR.wsgi.application'
 
+
 # Database
-# <--- CAMBIO TOTAL AQUÍ:
+
+# 1. CONEXION AWS (ACTIVA)
+# ---------------------------------------------------
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': os.getenv('DB_HOST'),
-        'PORT': os.getenv('DB_PORT'),
+        'NAME': 'bazar',
+        'USER': 'admin',
+        'PASSWORD': 'Agus123',
+        'HOST': 'localhost',
+        'PORT': '3306',
     }
 }
+
+# 2. CONEXION XAMPP LOCAL (COMENTADA PARA RESPALDO)
+# ---------------------------------------------------
+# DATABASES = {
+#    'default': {
+#        'ENGINE': 'django.db.backends.mysql',
+#        'NAME': os.getenv('DB_NAME'),
+#        'USER': os.getenv('DB_USER'),
+#        'PASSWORD': os.getenv('DB_PASSWORD'),
+#        'HOST': os.getenv('DB_HOST'),
+#        'PORT': os.getenv('DB_PORT'),
+#    }
+# }
+
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
