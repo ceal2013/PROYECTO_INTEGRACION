@@ -4,114 +4,172 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <link rel="icon" href="/static/iconobazar.png" type="image/png">
+    
+    <link rel="icon" href="{% static 'iconobazar.png' %}" type="image/png">
     <title>Proyecto Bazar</title>
+    
     <style>
-        body { background-color: #f4f4f4; }
-        .navbar { background-color: #198754; } 
-        .navbar-brand, .nav-link, .navbar-text { color: #fff !important; }
-        .layout { display: flex; min-height: 100vh; }
-        .sidebar { width: 250px; background-color: #ffffff; border-right: 1px solid #ddd; padding: 1rem; }
-        .main-container {
-            display: flex;
-            flex-direction: column;
-            flex-grow: 1;
-            padding: 2rem;
-            background-color: #f8f9fa;
-            min-height: 100vh; /* Ocupar al menos toda la altura de la pantalla */
+        body { 
+            background-color: #f4f4f4; 
+            margin: 0;
         }
-        .card { box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        .card-title { color: #198754; } 
+        .navbar { 
+            background-color: #198754; 
+        } 
+        .navbar-brand, .nav-link, .navbar-text { 
+            color: #fff !important; 
+        }
+        
+        /* --- LAYOUT PRINCIPAL (Desktop) --- */
+        .layout { 
+            display: flex; 
+            min-height: 100vh; /* Ocupa toda la altura de la pantalla */
+            flex-direction: row; /* Sidebar a la izq, Contenido a la der */
+        }
+        
+        .sidebar { 
+            width: 250px; 
+            background-color: #ffffff; 
+            border-right: 1px solid #ddd; 
+            padding: 1rem; 
+            flex-shrink: 0; /* Evita que se encoja */
+        }
+        
+        .main-container { 
+            display: flex; 
+            flex-direction: column; /* Apila contenido y footer verticalmente */
+            flex-grow: 1; /* Ocupa todo el ancho restante */
+            padding: 2rem; 
+            background-color: #f8f9fa; 
+            width: 100%; 
+        }
+        
+        .card { 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1); 
+        }
+        .card-title { 
+            color: #198754; 
+        }
+
+        /* --- MODO MÓVIL (Pantallas < 768px) --- */
+        @media (max-width: 768px) {
+            .layout {
+                flex-direction: column; /* Cambia a vertical: Menú arriba, contenido abajo */
+            }
+            .sidebar {
+                width: 100%; 
+                height: auto;
+                border-right: none;
+                border-bottom: 1px solid #ddd;
+            }
+            .main-container {
+                padding: 1rem; 
+            }
+        }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="{% url 'home' %}">Bazar "El Sol"</a>
-        {% if request.session.usuario_id %}
-            <div class="ms-auto d-flex align-items-center">
-                <p class="mb-0 text-white me-3">Usuario: <strong>{{ request.session.username }}</strong> ({{ request.session.rol }})</p>
-                <a href="{% url 'logout' %}" class="btn btn-outline-light btn-sm">Cerrar sesión</a>
+
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{% url 'home' %}">
+                <i class="bi bi-shop me-2"></i>Bazar "El Sol"
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarText">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarText">
+                {% if request.session.usuario_id %}
+                    <div class="ms-auto d-flex align-items-center">
+                        <span class="navbar-text me-3">
+                            <i class="bi bi-person-circle"></i> 
+                            Usuario: <strong>{{ request.session.username }}</strong> ({{ request.session.rol }})
+                        </span>
+                        <a href="{% url 'logout' %}" class="btn btn-outline-light btn-sm">Cerrar sesión</a>
+                    </div>
+                {% endif %}
             </div>
-        {% endif %}
-    </div>
-</nav>
-<div class="layout">
-    <nav class="sidebar d-flex flex-column">
-        <div>
-            <div class="sidebar-header d-flex flex-column align-items-center">
-                <img src="{% static 'logobazar.jpg' %}" alt="Logo Bazar" style="max-width: 100%; height: auto;">
+        </div>
+    </nav>
+    
+    <div class="layout">
+        
+        <nav class="sidebar d-flex flex-column">
+            <div class="sidebar-header d-flex flex-column align-items-center mb-3">
+                <img src="{% static 'logobazar.jpg' %}" alt="Logo Bazar" style="max-width: 100%; height: auto; border-radius: 8px;">
             </div>
-            <hr class="my-0">
+            
             <div class="accordion" id="sidebarAccordion">
                 <div class="accordion-item">
                     <h2 class="accordion-header">
                         <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#ventasCollapse">
-                            Ventas
+                            <i class="bi bi-cart3 me-2"></i> Ventas
                         </button>
                     </h2>
                     <div id="ventasCollapse" class="accordion-collapse collapse show" data-bs-parent="#sidebarAccordion">
-                        <div class="accordion-body">
+                        <div class="accordion-body p-0">
                             <ul class="list-group list-group-flush">
                                 <li class="list-group-item">
-                                    <a href="{% url 'crear_venta' %}" class="text-decoration-none d-flex align-items-center">
-                                        <i class="bi bi-cart-plus me-2"></i> Nueva Venta
+                                    <a href="{% url 'crear_venta' %}" class="text-decoration-none text-dark d-block py-1">
+                                        <i class="bi bi-cart-plus me-2 text-success"></i> Nueva Venta
                                     </a>
                                 </li>
                             </ul>
                         </div>
                     </div>
                 </div>
+
                 {% if request.session.rol == "Jefe de Ventas" %}
                 <div class="accordion-item">
                     <h2 class="accordion-header">
                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#reportesCollapse">
-                            Reportes
+                            <i class="bi bi-graph-up me-2"></i> Reportes
                         </button>
                     </h2>
                     <div id="reportesCollapse" class="accordion-collapse collapse" data-bs-parent="#sidebarAccordion">
-                        <div class="accordion-body">
+                        <div class="accordion-body p-0">
                             <ul class="list-group list-group-flush">
                                 <li class="list-group-item">
-                                    <a href="{% url 'control_dia' %}" class="text-decoration-none d-flex align-items-center">
-                                        <i class="bi bi-calendar-check me-2"></i> Control de Día
+                                    <a href="{% url 'control_dia' %}" class="text-decoration-none text-dark d-block py-1">
+                                        <i class="bi bi-calendar-check me-2 text-primary"></i> Control de Día
                                     </a>
                                 </li>
                                 <li class="list-group-item">
-                                    <a href="{% url 'reporte_diario' %}" class="text-decoration-none d-flex align-items-center">
-                                        <i class="bi bi-clipboard-data me-2"></i> Reporte Diario
+                                    <a href="{% url 'reporte_diario' %}" class="text-decoration-none text-dark d-block py-1">
+                                        <i class="bi bi-clipboard-data me-2 text-primary"></i> Reporte Diario
                                     </a>
                                 </li>
                             </ul>
                         </div>
                     </div>
                 </div>
+
                 <div class="accordion-item">
                     <h2 class="accordion-header">
                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#adminCollapse">
-                            Administración
+                            <i class="bi bi-gear me-2"></i> Administración
                         </button>
                     </h2>
                     <div id="adminCollapse" class="accordion-collapse collapse" data-bs-parent="#sidebarAccordion">
-                        <div class="accordion-body">
+                        <div class="accordion-body p-0">
                             <ul class="list-group list-group-flush">
                                 <li class="list-group-item">
-                                    <a href="{% url 'listar_productos' %}" class="text-decoration-none d-flex align-items-center">
-                                        <i class="bi bi-box-seam me-2"></i> Productos
+                                    <a href="{% url 'listar_productos' %}" class="text-decoration-none text-dark d-block py-1">
+                                        <i class="bi bi-box-seam me-2 text-warning"></i> Productos
                                     </a>
                                 </li>
                                 <li class="list-group-item">
-                                    <a href="{% url 'listar_clientes' %}" class="text-decoration-none d-flex align-items-center">
-                                        <i class="bi bi-person-lines-fill me-2"></i> Clientes
+                                    <a href="{% url 'listar_clientes' %}" class="text-decoration-none text-dark d-block py-1">
+                                        <i class="bi bi-person-lines-fill me-2 text-warning"></i> Clientes
                                     </a>
                                 </li>
                                 <li class="list-group-item">
-                                    <a href="{% url 'listar_usuarios' %}" class="text-decoration-none d-flex align-items-center">
-                                        <i class="bi bi-people-fill me-2"></i> Usuarios
+                                    <a href="{% url 'listar_usuarios' %}" class="text-decoration-none text-dark d-block py-1">
+                                        <i class="bi bi-people-fill me-2 text-warning"></i> Usuarios
                                     </a>
                                 </li>
                             </ul>
@@ -120,35 +178,36 @@
                 </div>
                 {% endif %}
             </div>
-        </div>
-    </nav>
-    <div class="main-container">
-        {% if messages %}
-        <div class="container">
-            {% for message in messages %}
-            <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </nav>
+        
+        <div class="main-container">
+            
+            {% if messages %}
+            <div class="container-fluid mb-3">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+                    {% if message.tags == 'success' %}<i class="bi bi-check-circle-fill me-2"></i>{% endif %}
+                    {% if message.tags == 'error' %}<i class="bi bi-exclamation-triangle-fill me-2"></i>{% endif %}
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
             </div>
-            {% endfor %}
-        </div>
-        {% endif %}
-        {% block content %}
-        {% endblock %}
+            {% endif %}
+            
+            {% block content %}
+            {% endblock %}
 
-            <footer class="py-4 bg-light mt-auto border-top">
-                <div class="container-fluid px-4">
-                    <div class="d-flex align-items-center justify-content-between small">
-                        <div class="text-muted">Copyright &copy; BazarAlDía 2025</div>
-                        <div>
-                            <a href="#" class="text-decoration-none link-secondary">Políticas de Privacidad</a>
-                            &middot;
-                            <a href="#" class="text-decoration-none link-secondary">Términos y Condiciones</a>
-                        </div>
-                    </div>
+            <footer class="py-4 mt-auto border-top text-center text-muted" style="background-color: transparent;">
+                <div class="container-fluid">
+                    <small>
+                        Copyright &copy; <strong>BazarAlDía 2025</strong>. Todos los derechos reservados.
+                        <br>
+                        <a href="#" class="text-decoration-none link-secondary">Privacidad</a> &middot; 
+                        <a href="#" class="text-decoration-none link-secondary">Términos</a>
+                    </small>
                 </div>
             </footer>
-    </div>
-</div>
-</body>
+
+        </div> </div> </body>
 </html>
