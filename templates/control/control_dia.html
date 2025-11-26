@@ -1,36 +1,42 @@
 {% extends 'base_layout.html' %}
 {% block content %}
 
-<div class="container">
-    <div class="card">
-        <div class="card-body">
-
+                <hr class="my-4 w-50 mx-auto">
                 {% if control_hoy.estado == 'Abierto' %}
-                    <h1 class="display-4 text-success">DÍA ABIERTO</h1>
-                    <p class="lead">El sistema está aceptando ventas.</p>
-                    <form method="post" class="mt-4">
+                    >                         <div class="mb-3">
+                        <i class="bi bi-check-circle-fill text-success" style="font-size: 5rem;"></i>
+                    </div>
+                    <h1 class="display-4 text-success fw-bold mb-3">DÍA ABIERTO</h1>
+                    <p class="lead text-muted mb-4">El sistema está habilitado. Los vendedores pueden registrar ventas.</p>
+                    
+                    <form method="post">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-danger btn-lg">
-                            <i class="bi bi-lock-fill me-2"></i> Cerrar Día
+                        <button type="submit" class="btn btn-danger btn-lg px-5 rounded-pill">
+                            <i class="bi bi-lock-fill me-2"></i> Cerrar el Día
                         </button>
                     </form>
                 {% else %}
-                    <h1 class="display-4 text-danger">DÍA CERRADO</h1>
-                    <p class="lead">El sistema no está aceptando ventas.</p>
-                    <form method="post" class="mt-4">
+                    >                         <div class="mb-3">
+                        <i class="bi bi-x-circle-fill text-danger" style="font-size: 5rem;"></i>
+                    </div>
+                    <h1 class="display-4 text-danger fw-bold mb-3">DÍA CERRADO</h1>
+                    <p class="lead text-muted mb-4">El sistema está bloqueado. No es posible registrar nuevas ventas.</p>
+                    
+                    <form method="post">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-success btn-lg">
-                            <i class="bi bi-unlock-fill me-2"></i> Abrir Día
+                        <button type="submit" class="btn btn-success btn-lg px-5 rounded-pill">
+                            <i class="bi bi-unlock-fill me-2"></i> Abrir el Día
                         </button>
                     </form>
                 {% endif %}
             </div>
             <div class="card-footer text-muted">
-                Último cambio realizado por: {{ control_hoy.id_usuario.username }}
+                <small>
+                    <i class="bi bi-person-circle me-1"></i>
+                    Último cambio realizado por: <strong>{{ control_hoy.id_usuario.username|default:"Sistema" }}</strong>
+                </small>
             </div>
         </div>
-    </div>
-
     </div>
 </div>
 
