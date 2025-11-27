@@ -4,10 +4,10 @@ Django settings for Bazar "El Sol" project.
 
 from pathlib import Path
 import os
-from dotenv import load_dotenv
+#from dotenv import load_dotenv
 
 # Cargar variables del .env (aunque ahora usaremos credenciales directas para AWS)
-load_dotenv()
+#load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -15,14 +15,14 @@ TEMPLATES_DIR = BASE_DIR / 'templates'
 STATIC_DIR = BASE_DIR / 'static'
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-clave-por-defecto-para-aws')
+#SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-clave-por-defecto-para-aws')
+SECRET_KEY = 'clave-segura-para-demo-aws'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # Forzamos True para la demo si el env falla
 DEBUG = True 
 
 # CAMBIO PARA AWS: Permitir cualquier IP
-ALLOWED_HOSTS = ['*']
 
 
 # Application definition
