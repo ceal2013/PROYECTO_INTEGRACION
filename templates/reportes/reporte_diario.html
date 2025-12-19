@@ -2,54 +2,66 @@
 {% block content %}
 
 <style>
-    /* --- ESTILOS DE IMPRESIÓN CORREGIDOS --- */
+    /* --- ESTILOS DE IMPRESIÓN (VERTICAL Y 1 HOJA) --- */
     @media print {
-        /* 1. Ocultar TODO el contenido del sitio */
-        body {
+        /* 1. Configuración de la Hoja Física */
+        @page {
+            size: portrait; /* Fuerza Vertical */
+            margin: 0mm;    /* Elimina márgenes de la impresora */
+        }
+
+        /* 2. Resetear HTML y Body para borrar "fantasmas" */
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: hidden !important; /* Clave para evitar hoja 2 */
             visibility: hidden !important;
             background-color: white !important;
-            height: auto !important;
-            width: 100% !important;
-            overflow: visible !important;
         }
 
-        /* 2. Rescatar el MODAL y hacerlo visible */
+        /* 3. Rescatar y Posicionar el Voucher */
         #modalVoucher {
             visibility: visible !important;
-            position: absolute !important; /* Fuerza bruta: sacar del flujo normal */
+            position: absolute !important;
             left: 0 !important;
             top: 0 !important;
-            margin: 0 !important;
-            padding: 10px !important; /* Un poco de aire */
             width: 100% !important;
-            height: auto !important;
-            z-index: 9999 !important; /* Poner encima de todo */
+            margin: 0 !important;
+            padding: 0 !important;
         }
 
-        /* 3. Asegurar que los hijos del modal (textos, tablas) sean visibles */
+        /* 4. Anular estilos de centrado de Bootstrap (Causa del espacio blanco) */
+        #modalVoucher .modal-dialog {
+            margin: 0 !important;
+            padding: 0 !important;
+            max-width: 100% !important;
+            transform: none !important; /* Quita el centrado visual */
+            display: block !important;
+        }
+
+        #modalVoucher .modal-content {
+            border: none !important;
+            box-shadow: none !important;
+            padding: 10mm !important; /* Margen interno para que no se pegue al borde */
+        }
+
         #modalVoucher * {
             visibility: visible !important;
         }
 
-        /* 4. Limpieza visual: Quitar sombras, bordes y botones */
-        .modal-dialog {
-            margin: 0 !important;
-            padding: 0 !important;
-            max-width: 100% !important;
-            box-shadow: none !important;
-        }
-        .modal-content {
-            border: none !important;
-            box-shadow: none !important;
-        }
-        .modal-footer, .btn-close, .modal-header button {
-            display: none !important; /* Adiós botones */
+        /* 5. Ocultar elementos innecesarios */
+        .modal-header, .modal-footer, .btn-close {
+            display: none !important;
         }
         
-        /* 5. Ajuste para impresora (Evita página en blanco extra) */
-        @page {
-            margin: 5mm; /* Margen pequeño de seguridad */
-            size: auto;  /* Se adapta al papel (Carta o Térmico) */
+        /* 6. Ajuste de textos para impresión */
+        .table {
+            color: black !important;
+        }
+        h4, h5, small, span, div {
+            color: black !important; /* Fuerza color negro para impresoras térmicas */
         }
     }
     /* Estilos Premium */
