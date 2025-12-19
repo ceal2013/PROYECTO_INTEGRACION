@@ -12,30 +12,33 @@
     .bg-icon-info { background-color: rgba(13, 202, 240, 0.1); color: #0dcaf0; }
     .bg-icon-warning { background-color: rgba(255, 193, 7, 0.1); color: #ffc107; }
 
-    /* --- ESTILOS DE IMPRESIÓN (TICKET TÉRMICO / CARTA) --- */
+    /* --- ESTILOS DE IMPRESIÓN (SOPORTA VOUCHER Y CIERRE Z) --- */
     @media print {
         @page { size: portrait; margin: 0mm; }
         html, body { 
             width: 100%; height: 100%; margin: 0 !important; padding: 0 !important; 
             overflow: hidden !important; visibility: hidden !important; background-color: white !important; 
         }
-        /* Solo mostrar el Modal */
-        #modalVoucher { 
+        
+        /* MAGIA: Imprime el modal que esté ABIERTO (Tenga la clase .show) */
+        .modal.show { 
             visibility: visible !important; position: absolute !important; 
             left: 0 !important; top: 0 !important; width: 100% !important; 
             margin: 0 !important; padding: 0 !important; 
         }
-        #modalVoucher .modal-dialog { 
+        .modal.show .modal-dialog { 
             margin: 0 !important; padding: 0 !important; max-width: 100% !important; 
             transform: none !important; display: block !important; 
         }
-        #modalVoucher .modal-content { 
+        .modal.show .modal-content { 
             border: none !important; box-shadow: none !important; padding: 5mm !important; 
         }
-        /* Forzar colores negros para impresora térmica */
-        #modalVoucher * { visibility: visible !important; color: black !important; }
-        /* Ocultar botones */
+        /* Forzar colores negros y textos visibles */
+        .modal.show * { visibility: visible !important; color: black !important; }
+        
+        /* Ocultar botones y decoraciones */
         .modal-header, .modal-footer, .btn-close { display: none !important; }
+        .no-print { display: none !important; }
     }
 </style>
 
@@ -44,19 +47,19 @@
     <div class="card mb-4 shadow-sm border-0 border-start border-4 border-primary">
         <div class="card-body py-3">
             <form method="GET" action="{% url 'reporte_diario' %}" class="row g-3 align-items-end">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label for="fecha" class="form-label fw-bold text-muted small text-uppercase">Fecha del Reporte</label>
                     <input type="date" class="form-control" id="fecha" name="fecha" value="{{ fecha_reporte|date:'Y-m-d' }}">
                 </div>
                 <div class="col-md-4">
-                    <button type="submit" class="btn btn-primary px-4">
-                        <i class="bi bi-search me-2"></i>Filtrar
-                    </button>
+                    <button type="submit" class="btn btn-primary px-4"><i class="bi bi-search me-2"></i>Filtrar</button>
                     <a href="{% url 'reporte_diario' %}" class="btn btn-outline-secondary ms-2">Ver Hoy</a>
                 </div>
-                <div class="col-md-4 text-end">
-                    <h5 class="text-muted mb-0">Reporte del:</h5>
-                    <h3 class="fw-bold text-primary mb-0">{{ fecha_reporte|date:"d \d\e F \d\e Y"|title }}</h3>
+                
+                <div class="col-md-5 text-end">
+                    <button type="button" class="btn btn-dark shadow-sm" data-bs-toggle="modal" data-bs-target="#modalCierreZ">
+                        <i class="bi bi-printer-fill me-2"></i>Imprimir Cierre Z
+                    </button>
                 </div>
             </form>
         </div>
@@ -111,7 +114,6 @@
     </div>
 
     <div class="row mb-4">
-        
         <div class="col-md-4 mb-3">
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-header bg-white py-3">
@@ -133,7 +135,6 @@
                 </div>
             </div>
         </div>
-
         <div class="col-md-4 mb-3">
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-header bg-white py-3">
@@ -163,7 +164,6 @@
                 </div>
             </div>
         </div>
-
         <div class="col-md-4 mb-3">
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-header bg-white py-3">
@@ -175,14 +175,7 @@
                         <tbody>
                             {% for vend in total_por_vendedor %}
                             <tr>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        <div class="rounded-circle bg-secondary text-white d-flex justify-content-center align-items-center me-2" style="width:25px; height:25px; font-size:0.7rem;">
-                                            {{ vend.id_usuario__username|first|upper }}
-                                        </div>
-                                        {{ vend.id_usuario__username|title }}
-                                    </div>
-                                </td>
+                                <td>{{ vend.id_usuario__username|title }}</td>
                                 <td class="text-center">{{ vend.cantidad }}</td>
                                 <td class="text-end fw-bold text-success">${{ vend.total|floatformat:0 }}</td>
                             </tr>
@@ -203,7 +196,7 @@
                 <div class="col-md-6">
                     <div class="input-group input-group-sm">
                         <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
-                        <input type="text" id="buscadorVentas" class="form-control border-start-0" placeholder="Buscar por folio, cliente, tipo...">
+                        <input type="text" id="buscadorVentas" class="form-control border-start-0" placeholder="Buscar por folio, cliente...">
                         <span class="input-group-text bg-primary text-white">{{ ventas_dia|length }} Ventas</span>
                     </div>
                 </div>
@@ -214,54 +207,35 @@
                 <table class="table table-hover align-middle mb-0" id="tablaVentas">
                     <thead class="table-light">
                         <tr>
-                            <th>Tipo</th>
-                            <th>Folio</th>
-                            <th>Pago</th> <th>Cliente</th>
-                            <th>Vendedor</th>
-                            <th>Hora</th>
-                            <th class="text-end">Monto Total</th>
-                            <th class="text-center">Acciones</th>
+                            <th>Tipo</th><th>Folio</th><th>Pago</th><th>Cliente</th><th>Vendedor</th><th>Hora</th><th class="text-end">Total</th><th class="text-center">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for venta in ventas_dia %}
                         <tr>
                             <td>
-                                {% if venta.tipo_documento == 'Boleta' %}
-                                    <span class="badge bg-warning text-dark bg-opacity-25 border border-warning">Boleta</span>
-                                {% else %}
-                                    <span class="badge bg-info text-dark bg-opacity-25 border border-info">Factura</span>
-                                {% endif %}
+                                {% if venta.tipo_documento == 'Boleta' %} <span class="badge bg-warning text-dark bg-opacity-25 border border-warning">Boleta</span>
+                                {% else %} <span class="badge bg-info text-dark bg-opacity-25 border border-info">Factura</span> {% endif %}
                             </td>
                             <td class="fw-bold">#{{ venta.folio }}</td>
                             <td>
-                                {% if venta.metodo_pago == 'Efectivo' %}
-                                    <span class="badge bg-success bg-opacity-10 text-success border border-success">Efectivo</span>
-                                {% elif venta.metodo_pago == 'Tarjeta' %}
-                                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary">Tarjeta</span>
-                                {% else %}
-                                    <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary">{{ venta.metodo_pago }}</span>
-                                {% endif %}
+                                {% if venta.metodo_pago == 'Efectivo' %} <span class="badge bg-success bg-opacity-10 text-success border border-success">Efectivo</span>
+                                {% elif venta.metodo_pago == 'Tarjeta' %} <span class="badge bg-primary bg-opacity-10 text-primary border border-primary">Tarjeta</span>
+                                {% else %} <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary">{{ venta.metodo_pago }}</span> {% endif %}
                             </td>
                             <td style="white-space: normal; max-width: 250px;">
-                                {% if venta.id_cliente %}
-                                    <strong>{{ venta.id_cliente.razon_social }}</strong>
-                                {% else %}
-                                    <span class="text-muted fst-italic">Público General</span>
-                                {% endif %}
+                                {% if venta.id_cliente %} <strong>{{ venta.id_cliente.razon_social }}</strong>
+                                {% else %} <span class="text-muted fst-italic">Público General</span> {% endif %}
                             </td>
                             <td>{{ venta.id_usuario.username|title }}</td>
-                            <td class="text-muted small"><i class="bi bi-clock me-1"></i>{{ venta.fecha|date:"H:i" }}</td>
+                            <td class="text-muted small">{{ venta.fecha|date:"H:i" }}</td>
                             <td class="text-end fw-bold text-success">${{ venta.total|floatformat:0 }}</td>
                             <td class="text-center">
-                                <button type="button" class="btn btn-sm btn-outline-primary" 
-                                        onclick="verVoucher({{ venta.id_venta }})" title="Ver Voucher">
-                                    <i class="bi bi-eye-fill"></i>
-                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="verVoucher({{ venta.id_venta }})"><i class="bi bi-eye-fill"></i></button>
                             </td>
                         </tr>
                         {% empty %}
-                        <tr><td colspan="8" class="text-center py-5"><i class="bi bi-inbox text-muted fs-1"></i><p class="text-muted mt-2">No se han registrado ventas.</p></td></tr>
+                        <tr><td colspan="8" class="text-center py-5">Sin ventas.</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
@@ -280,24 +254,16 @@
             <div class="modal-body p-0">
                 <div class="bg-light p-3 border-bottom text-center">
                     <h4 class="fw-bold m-0 text-primary" id="v_tipo_folio">Boleta #000</h4>
-                    <small class="text-muted" id="v_fecha">Fecha: --/--/----</small>
+                    <small class="text-muted" id="v_fecha">--/--/----</small>
                 </div>
                 <div class="p-3 border-bottom small">
-                    <div class="d-flex justify-content-between mb-1">
-                        <span class="text-muted">Cliente:</span><span class="fw-bold text-end" style="max-width: 200px;" id="v_cliente">---</span>
-                    </div>
-                    <div class="d-flex justify-content-between mb-1">
-                        <span class="text-muted">Vendedor:</span><span class="fw-bold" id="v_vendedor">---</span>
-                    </div>
-                    <div class="d-flex justify-content-between">
-                        <span class="text-muted">Pago:</span><span class="fw-bold text-uppercase" id="v_metodo_pago">---</span>
-                    </div>
+                    <div class="d-flex justify-content-between"><span>Cliente:</span><span class="fw-bold" id="v_cliente">---</span></div>
+                    <div class="d-flex justify-content-between"><span>Vendedor:</span><span class="fw-bold" id="v_vendedor">---</span></div>
+                    <div class="d-flex justify-content-between"><span>Pago:</span><span class="fw-bold" id="v_metodo_pago">---</span></div>
                 </div>
                 <div class="table-responsive" style="max-height: 300px;">
                     <table class="table table-sm table-striped mb-0 small">
-                        <thead class="table-light sticky-top">
-                            <tr><th class="ps-3">Producto</th><th class="text-center">Cant.</th><th class="text-end pe-3">Subtotal</th></tr>
-                        </thead>
+                        <thead class="table-light sticky-top"><tr><th class="ps-3">Prod</th><th class="text-center">Cant</th><th class="text-end pe-3">Sub</th></tr></thead>
                         <tbody id="v_tabla_items"></tbody>
                     </table>
                 </div>
@@ -306,9 +272,75 @@
                 </div>
             </div>
             <div class="modal-footer bg-light">
-                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
-                <button type="button" class="btn btn-primary btn-sm" onclick="window.print()">
-                    <i class="bi bi-printer me-2"></i>Imprimir
+                <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
+                <button class="btn btn-primary btn-sm" onclick="window.print()">Imprimir</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalCierreZ" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title fw-bold"><i class="bi bi-printer-fill me-2"></i>Cierre de Caja (Z)</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="text-center mb-4 border-bottom pb-3">
+                    <h4 class="fw-bold">BAZAR "EL SOL"</h4>
+                    <p class="mb-0 text-muted small">REPORTE DE CIERRE DIARIO (Z)</p>
+                    <h5 class="mt-2 fw-bold text-dark">{{ fecha_reporte|date:"d/m/Y" }}</h5>
+                </div>
+
+                <h6 class="fw-bold border-bottom pb-1">1. TOTALES GENERALES</h6>
+                <div class="d-flex justify-content-between mb-1">
+                    <span>Ventas Totales:</span>
+                    <span class="fw-bold">{{ totales_generales.cantidad_ventas|default:0 }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-1">
+                    <span>Monto Neto:</span>
+                    <span>${{ totales_generales.total_neto|default:0|floatformat:0 }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-1">
+                    <span>IVA (19%):</span>
+                    <span>${{ totales_generales.total_iva|default:0|floatformat:0 }}</span>
+                </div>
+                <div class="d-flex justify-content-between mt-2 pt-2 border-top">
+                    <span class="fw-bold h5">RECAUDACIÓN:</span>
+                    <span class="fw-bold h5 text-success">${{ totales_generales.total_recaudado|default:0|floatformat:0 }}</span>
+                </div>
+
+                <h6 class="fw-bold border-bottom pb-1 mt-4">2. DESGLOSE POR PAGO</h6>
+                <table class="table table-sm table-borderless mb-0 small">
+                    {% for pago in total_por_pago %}
+                    <tr>
+                        <td>{{ pago.metodo_pago }}</td>
+                        <td class="text-end fw-bold">${{ pago.total|floatformat:0 }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+
+                <h6 class="fw-bold border-bottom pb-1 mt-4">3. DESGLOSE POR VENDEDOR</h6>
+                <table class="table table-sm table-borderless mb-0 small">
+                    {% for vend in total_por_vendedor %}
+                    <tr>
+                        <td>{{ vend.id_usuario__username|title }}</td>
+                        <td class="text-end fw-bold">${{ vend.total|floatformat:0 }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+
+                <div class="text-center mt-5 pt-3 border-top border-dark border-2 border-dotted">
+                    <small class="text-muted">--- FIN DEL REPORTE ---</small><br>
+                    <small>{{ request.session.username|title }} - {% now "H:i:s" %}</small>
+                </div>
+            </div>
+            
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-dark" onclick="window.print()">
+                    <i class="bi bi-printer me-2"></i>Imprimir Ticket
                 </button>
             </div>
         </div>
@@ -316,7 +348,6 @@
 </div>
 
 <script>
-    // BUSCADOR INSTANTÁNEO
     document.getElementById('buscadorVentas').addEventListener('keyup', function() {
         let texto = this.value.toLowerCase();
         let filas = document.getElementById('tablaVentas').getElementsByTagName('tbody')[0].getElementsByTagName('tr');
@@ -326,7 +357,6 @@
         }
     });
 
-    // API VOUCHER
     function verVoucher(idVenta) {
         const modalEl = document.getElementById('modalVoucher');
         const modal = new bootstrap.Modal(modalEl);
@@ -341,22 +371,16 @@
                     document.getElementById('v_fecha').innerText = data.fecha;
                     document.getElementById('v_cliente').innerText = data.cliente;
                     document.getElementById('v_vendedor').innerText = data.vendedor;
-                    
-                    // Mostrar Pago
                     document.getElementById('v_metodo_pago').innerText = data.metodo_pago || 'Efectivo';
-                    
                     document.getElementById('v_total').innerText = '$' + data.total.toLocaleString('es-CL');
                     let html = '';
                     data.items.forEach(i => {
                         html += `<tr><td class="ps-3">${i.producto}</td><td class="text-center">${i.cantidad}</td><td class="text-end pe-3">$${i.subtotal.toLocaleString('es-CL')}</td></tr>`;
                     });
                     document.getElementById('v_tabla_items').innerHTML = html;
-                } else { alert('Error al cargar la venta'); }
+                } else { alert('Error al cargar'); }
             })
-            .catch(e => { 
-                console.error(e); 
-                document.getElementById('v_tabla_items').innerHTML = '<tr><td colspan="3" class="text-center text-danger">Error de conexión</td></tr>'; 
-            });
+            .catch(e => { console.error(e); document.getElementById('v_tabla_items').innerHTML = '<tr><td colspan="3" class="text-center text-danger">Error de conexión</td></tr>'; });
     }
 </script>
 {% endblock %}
