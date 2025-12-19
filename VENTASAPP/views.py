@@ -247,7 +247,6 @@ def eliminar_usuario(request, id_usuario):
 @custom_login_required
 @role_required(allowed_roles=['Jefe de Ventas'])
 def control_dia(request):
-    # CORRECCION: Usar localdate() para que tome la fecha de Chile, no la del Server UTC
     fecha_hoy_chile = timezone.localdate()
 
     control_hoy, created = ControlDia.objects.get_or_create(
@@ -257,9 +256,12 @@ def control_dia(request):
     if request.method == 'POST':
         if control_hoy.estado == 'Cerrado':
             control_hoy.estado = 'Abierto'
-            messages.success(request, 'El día ha sido ABIERTO. Ya se pueden registrar ventas.')
+            # GUARDAR HORA EXACTA
+            control_hoy.hora_apertura = timezone.localtime().time() 
+            messages.success(request, f'El día ha sido ABIERTO a las {control_hoy.hora_apertura.strftime("%H:%M")}.')
         else:
             control_hoy.estado = 'Cerrado'
+            # Opcional: Podrías limpiar la hora de apertura si quieres, o dejarla como histórico
             messages.warning(request, 'El día ha sido CERRADO. No se registrarán nuevas ventas.')
         
         control_hoy.id_usuario_id = request.session.get('usuario_id')

@@ -20,7 +20,15 @@
                         <div class="mb-3">
                             <i class="bi bi-check-circle-fill text-success" style="font-size: 5rem;"></i>
                         </div>
-                        <h1 class="display-4 text-success fw-bold mb-3">DÍA ABIERTO</h1>
+                        <h1 class="display-4 text-success fw-bold mb-2">DÍA ABIERTO</h1>
+                        
+                        {% if control_hoy.hora_apertura %}
+                            <p class="h5 text-dark mb-4">
+                                <i class="bi bi-clock-history text-primary"></i> 
+                                Abierto a las: <strong>{{ control_hoy.hora_apertura|date:"H:i" }} hrs</strong>
+                            </p>
+                        {% endif %}
+
                         <p class="lead text-muted mb-4">El sistema está habilitado. Los vendedores pueden registrar ventas.</p>
                         
                         <form method="post">
