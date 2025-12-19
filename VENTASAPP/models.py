@@ -4,7 +4,6 @@ from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.utils import timezone
 
-
 class UsuarioManager(BaseUserManager):
     """Manager personalizado para el modelo Usuario."""
 
@@ -20,7 +19,6 @@ class UsuarioManager(BaseUserManager):
     def create_superuser(self, username, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
-        # Forzar rol de superusuario a 'Jefe de Ventas'
         return self.create_user(username=username, password=password, rol='Jefe de Ventas', **extra_fields)
 
 
@@ -52,6 +50,8 @@ class Cliente(models.Model):
     razon_social = models.CharField(max_length=100)
     giro = models.CharField(max_length=100)
     direccion = models.CharField(max_length=150)
+    # NUEVO CAMPO: Fecha de Registro
+    fecha_registro = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
         return self.rut
@@ -118,4 +118,3 @@ class DetalleVenta(models.Model):
 
     def __str__(self):
         return f"Venta {self.id_venta.id_venta} - {self.id_producto.nombre} x {self.cantidad}"
-
