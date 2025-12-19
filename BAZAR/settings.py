@@ -23,7 +23,7 @@ SECRET_KEY = 'clave-segura-para-demo-aws'
 DEBUG = True 
 
 # CAMBIO PARA AWS: Permitir cualquier IP
-
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 INSTALLED_APPS = [
