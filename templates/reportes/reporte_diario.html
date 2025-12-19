@@ -2,47 +2,39 @@
 {% block content %}
 
 <style>
-    /* Estilos Premium */
-    .hover-lift {
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .hover-lift:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    }
-    .icon-circle-sm {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-    }
+    /* Estilos Visuales UI */
+    .hover-lift { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .hover-lift:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+    
+    .icon-circle-sm { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; }
     .bg-icon-success { background-color: rgba(25, 135, 84, 0.1); color: #198754; }
     .bg-icon-primary { background-color: rgba(13, 110, 253, 0.1); color: #0d6efd; }
     .bg-icon-info { background-color: rgba(13, 202, 240, 0.1); color: #0dcaf0; }
     .bg-icon-warning { background-color: rgba(255, 193, 7, 0.1); color: #ffc107; }
 
-    /* --- ESTILOS DE IMPRESIÓN (VERTICAL Y 1 HOJA) --- */
+    /* --- ESTILOS DE IMPRESIÓN (TICKET TÉRMICO / CARTA) --- */
     @media print {
         @page { size: portrait; margin: 0mm; }
-        html, body {
-            width: 100%; height: 100%; margin: 0 !important; padding: 0 !important;
-            overflow: hidden !important; visibility: hidden !important; background-color: white !important;
+        html, body { 
+            width: 100%; height: 100%; margin: 0 !important; padding: 0 !important; 
+            overflow: hidden !important; visibility: hidden !important; background-color: white !important; 
         }
-        #modalVoucher {
-            visibility: visible !important; position: absolute !important;
-            left: 0 !important; top: 0 !important; width: 100% !important;
-            margin: 0 !important; padding: 0 !important;
+        /* Solo mostrar el Modal */
+        #modalVoucher { 
+            visibility: visible !important; position: absolute !important; 
+            left: 0 !important; top: 0 !important; width: 100% !important; 
+            margin: 0 !important; padding: 0 !important; 
         }
-        #modalVoucher .modal-dialog {
-            margin: 0 !important; padding: 0 !important; max-width: 100% !important;
-            transform: none !important; display: block !important;
+        #modalVoucher .modal-dialog { 
+            margin: 0 !important; padding: 0 !important; max-width: 100% !important; 
+            transform: none !important; display: block !important; 
         }
-        #modalVoucher .modal-content {
-            border: none !important; box-shadow: none !important; padding: 5mm !important;
+        #modalVoucher .modal-content { 
+            border: none !important; box-shadow: none !important; padding: 5mm !important; 
         }
+        /* Forzar colores negros para impresora térmica */
         #modalVoucher * { visibility: visible !important; color: black !important; }
+        /* Ocultar botones */
         .modal-header, .modal-footer, .btn-close { display: none !important; }
     }
 </style>
@@ -76,9 +68,7 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <span class="text-muted small text-uppercase fw-bold">Total Recaudado</span>
-                        <div class="icon-circle-sm bg-icon-success">
-                            <i class="bi bi-cash-stack"></i>
-                        </div>
+                        <div class="icon-circle-sm bg-icon-success"><i class="bi bi-cash-stack"></i></div>
                     </div>
                     <h2 class="card-title fw-bold text-success mb-0">${{ totales_generales.total_recaudado|default:0|floatformat:0 }}</h2>
                     <small class="text-muted">Ingreso bruto</small>
@@ -90,9 +80,7 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <span class="text-muted small text-uppercase fw-bold">Neto (Sin IVA)</span>
-                        <div class="icon-circle-sm bg-icon-info">
-                            <i class="bi bi-wallet2"></i>
-                        </div>
+                        <div class="icon-circle-sm bg-icon-info"><i class="bi bi-wallet2"></i></div>
                     </div>
                     <h3 class="card-title fw-bold text-dark mb-0">${{ totales_generales.total_neto|default:0|floatformat:0 }}</h3>
                 </div>
@@ -103,9 +91,7 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <span class="text-muted small text-uppercase fw-bold">IVA (19%)</span>
-                        <div class="icon-circle-sm bg-icon-warning">
-                            <i class="bi bi-percent"></i>
-                        </div>
+                        <div class="icon-circle-sm bg-icon-warning"><i class="bi bi-percent"></i></div>
                     </div>
                     <h3 class="card-title fw-bold text-dark mb-0">${{ totales_generales.total_iva|default:0|floatformat:0 }}</h3>
                 </div>
@@ -116,9 +102,7 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <span class="text-muted small text-uppercase fw-bold">N° Ventas</span>
-                        <div class="icon-circle-sm bg-icon-primary">
-                            <i class="bi bi-receipt"></i>
-                        </div>
+                        <div class="icon-circle-sm bg-icon-primary"><i class="bi bi-receipt"></i></div>
                     </div>
                     <h3 class="card-title fw-bold text-dark mb-0">{{ totales_generales.cantidad_ventas|default:0 }}</h3>
                 </div>
@@ -127,16 +111,15 @@
     </div>
 
     <div class="row mb-4">
-        <div class="col-md-6 mb-3">
+        
+        <div class="col-md-4 mb-3">
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-header bg-white py-3">
-                    <h6 class="m-0 fw-bold text-secondary"><i class="bi bi-file-earmark-text me-2"></i>Por Tipo de Documento</h6>
+                    <h6 class="m-0 fw-bold text-secondary"><i class="bi bi-file-earmark-text me-2"></i>Por Documento</h6>
                 </div>
                 <div class="card-body p-0">
                     <table class="table table-hover mb-0 align-middle">
-                        <thead class="table-light">
-                            <tr><th>Tipo</th><th class="text-center">Cant.</th><th class="text-end">Total</th></tr>
-                        </thead>
+                        <thead class="table-light"><tr><th>Tipo</th><th class="text-center">Cant.</th><th class="text-end">Total</th></tr></thead>
                         <tbody>
                             {% for doc in total_por_documento %}
                             <tr>
@@ -144,30 +127,57 @@
                                 <td class="text-center">{{ doc.cantidad }}</td>
                                 <td class="text-end fw-bold text-success">${{ doc.total|floatformat:0 }}</td>
                             </tr>
-                            {% empty %}
-                            <tr><td colspan="3" class="text-center py-3 text-muted">Sin datos.</td></tr>
-                            {% endfor %}
+                            {% empty %}<tr><td colspan="3" class="text-center py-3 text-muted">Sin datos.</td></tr>{% endfor %}
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
-        <div class="col-md-6 mb-3">
+
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white py-3">
+                    <h6 class="m-0 fw-bold text-primary"><i class="bi bi-credit-card me-2"></i>Por Medio de Pago</h6>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="table-light"><tr><th>Método</th><th class="text-center">Cant.</th><th class="text-end">Total</th></tr></thead>
+                        <tbody>
+                            {% for pago in total_por_pago %}
+                            <tr>
+                                <td>
+                                    {% if pago.metodo_pago == 'Efectivo' %}
+                                        <i class="bi bi-cash-coin text-success me-1"></i> Efectivo
+                                    {% elif pago.metodo_pago == 'Tarjeta' %}
+                                        <i class="bi bi-credit-card-2-front text-primary me-1"></i> Tarjeta
+                                    {% else %}
+                                        <i class="bi bi-bank text-secondary me-1"></i> {{ pago.metodo_pago }}
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">{{ pago.cantidad }}</td>
+                                <td class="text-end fw-bold text-success">${{ pago.total|floatformat:0 }}</td>
+                            </tr>
+                            {% empty %}<tr><td colspan="3" class="text-center py-3 text-muted">Sin datos.</td></tr>{% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-header bg-white py-3">
                     <h6 class="m-0 fw-bold text-secondary"><i class="bi bi-person-badge me-2"></i>Por Vendedor</h6>
                 </div>
                 <div class="card-body p-0">
                     <table class="table table-hover mb-0 align-middle">
-                        <thead class="table-light">
-                            <tr><th>Vendedor</th><th class="text-center">Cant.</th><th class="text-end">Total</th></tr>
-                        </thead>
+                        <thead class="table-light"><tr><th>Vendedor</th><th class="text-center">Cant.</th><th class="text-end">Total</th></tr></thead>
                         <tbody>
                             {% for vend in total_por_vendedor %}
                             <tr>
                                 <td>
                                     <div class="d-flex align-items-center">
-                                        <div class="rounded-circle bg-secondary text-white d-flex justify-content-center align-items-center me-2" style="width:30px; height:30px; font-size:0.8rem;">
+                                        <div class="rounded-circle bg-secondary text-white d-flex justify-content-center align-items-center me-2" style="width:25px; height:25px; font-size:0.7rem;">
                                             {{ vend.id_usuario__username|first|upper }}
                                         </div>
                                         {{ vend.id_usuario__username|title }}
@@ -176,9 +186,7 @@
                                 <td class="text-center">{{ vend.cantidad }}</td>
                                 <td class="text-end fw-bold text-success">${{ vend.total|floatformat:0 }}</td>
                             </tr>
-                            {% empty %}
-                            <tr><td colspan="3" class="text-center py-3 text-muted">Sin datos.</td></tr>
-                            {% endfor %}
+                            {% empty %}<tr><td colspan="3" class="text-center py-3 text-muted">Sin datos.</td></tr>{% endfor %}
                         </tbody>
                     </table>
                 </div>
@@ -253,7 +261,7 @@
                             </td>
                         </tr>
                         {% empty %}
-                        <tr><td colspan="8" class="text-center py-5"><i class="bi bi-inbox text-muted fs-1"></i><p class="text-muted mt-2">Sin ventas.</p></td></tr>
+                        <tr><td colspan="8" class="text-center py-5"><i class="bi bi-inbox text-muted fs-1"></i><p class="text-muted mt-2">No se han registrado ventas.</p></td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
@@ -308,7 +316,7 @@
 </div>
 
 <script>
-    // BUSCADOR
+    // BUSCADOR INSTANTÁNEO
     document.getElementById('buscadorVentas').addEventListener('keyup', function() {
         let texto = this.value.toLowerCase();
         let filas = document.getElementById('tablaVentas').getElementsByTagName('tbody')[0].getElementsByTagName('tr');
@@ -318,7 +326,7 @@
         }
     });
 
-    // CARGAR VOUCHER
+    // API VOUCHER
     function verVoucher(idVenta) {
         const modalEl = document.getElementById('modalVoucher');
         const modal = new bootstrap.Modal(modalEl);
@@ -334,18 +342,21 @@
                     document.getElementById('v_cliente').innerText = data.cliente;
                     document.getElementById('v_vendedor').innerText = data.vendedor;
                     
-                    // MOSTRAR MÉTODO DE PAGO
-                    document.getElementById('v_metodo_pago').innerText = data.metodo_pago || 'Efectivo'; 
-
+                    // Mostrar Pago
+                    document.getElementById('v_metodo_pago').innerText = data.metodo_pago || 'Efectivo';
+                    
                     document.getElementById('v_total').innerText = '$' + data.total.toLocaleString('es-CL');
                     let html = '';
                     data.items.forEach(i => {
                         html += `<tr><td class="ps-3">${i.producto}</td><td class="text-center">${i.cantidad}</td><td class="text-end pe-3">$${i.subtotal.toLocaleString('es-CL')}</td></tr>`;
                     });
                     document.getElementById('v_tabla_items').innerHTML = html;
-                } else { alert('Error al cargar'); }
+                } else { alert('Error al cargar la venta'); }
             })
-            .catch(e => { console.error(e); document.getElementById('v_tabla_items').innerHTML = '<tr><td colspan="3" class="text-center text-danger">Error de conexión</td></tr>'; });
+            .catch(e => { 
+                console.error(e); 
+                document.getElementById('v_tabla_items').innerHTML = '<tr><td colspan="3" class="text-center text-danger">Error de conexión</td></tr>'; 
+            });
     }
 </script>
 {% endblock %}

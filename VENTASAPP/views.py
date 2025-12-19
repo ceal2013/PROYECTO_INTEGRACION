@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.hashers import check_password
 from datetime import date, datetime, time
-from django.utils import timezone  # Importante
+from django.utils import timezone
 from django.db import transaction
 from django.http import JsonResponse
 from django.db.models import Sum, Count, F, DecimalField, Max
@@ -45,48 +45,35 @@ def user_logout(request):
 @custom_login_required
 def home(request):
     rol = request.session.get('rol')
-    
-    # 1. Obtener fecha actual (Chile)
     fecha_hoy_chile = timezone.localdate()
 
-    # 2. Intentar obtener el control del día (Para saber si está Abierto/Cerrado)
     try:
         control_hoy = ControlDia.objects.get(fecha=fecha_hoy_chile)
     except ControlDia.DoesNotExist:
         control_hoy = None
 
-    # 3. Calcular ventas del día (Solo nos interesa mostrar el monto si es Jefe, 
-    # pero calculamos 0 por defecto para que no falle el template)
     total_vendido = Decimal('0.00')
 
     if rol == 'Jefe de Ventas':
-        # Calcular total real solo si es Jefe
         hoy_inicio = timezone.make_aware(datetime.combine(fecha_hoy_chile, time.min))
         hoy_fin = timezone.make_aware(datetime.combine(fecha_hoy_chile, time.max))
-        
         ventas_hoy = Venta.objects.filter(fecha__range=(hoy_inicio, hoy_fin))
         total_agregado = ventas_hoy.aggregate(total=Sum('total'))
         total_vendido = total_agregado.get('total') or Decimal('0.00')
-
-    # --- CAMBIO IMPORTANTE ---
-    # Ya NO hay "if rol == 'Vendedor': return redirect...".
-    # Ahora dejamos que pase directo al render.
 
     context = {
         'control_hoy': control_hoy,
         'total_vendido': total_vendido
     }
-
-    # 4. Renderizar el dashboard (El HTML se encarga de mostrar la versión Vendedor o Jefe)
     return render(request, 'home.html', context)
 
-# --- CRUD de Productos (Solo Jefe de Ventas) ---
+
+# --- CRUDs ---
 @custom_login_required
 @role_required(allowed_roles=['Jefe de Ventas'])
 def listar_productos(request):
     productos = Producto.objects.all()
     return render(request, 'administracion/listar_productos.html', {'productos': productos})
-
 
 @custom_login_required
 @role_required(allowed_roles=['Jefe de Ventas'])
@@ -99,9 +86,7 @@ def crear_producto(request):
             return redirect('listar_productos')
     else:
         form = ProductoForm()
-
     return render(request, 'administracion/form_producto.html', {'form': form, 'accion': 'Crear'})
-
 
 @custom_login_required
 @role_required(allowed_roles=['Jefe de Ventas'])
@@ -115,9 +100,7 @@ def editar_producto(request, codigo):
             return redirect('listar_productos')
     else:
         form = ProductoForm(instance=producto)
-
     return render(request, 'administracion/form_producto.html', {'form': form, 'accion': 'Editar'})
-
 
 @custom_login_required
 @role_required(allowed_roles=['Jefe de Ventas'])
@@ -128,17 +111,13 @@ def eliminar_producto(request, codigo):
         messages.success(request, 'Producto eliminado exitosamente.')
     except Exception:
         messages.error(request, 'No se puede eliminar el producto, está siendo usado en una venta.')
-
     return redirect('listar_productos')
 
-
-# --- CRUD de Clientes (Solo Jefe de Ventas) ---
 @custom_login_required
 @role_required(allowed_roles=['Jefe de Ventas'])
 def listar_clientes(request):
     clientes = Cliente.objects.all()
     return render(request, 'administracion/listar_clientes.html', {'clientes': clientes})
-
 
 @custom_login_required
 @role_required(allowed_roles=['Jefe de Ventas'])
@@ -151,9 +130,7 @@ def crear_cliente(request):
             return redirect('listar_clientes')
     else:
         form = ClienteForm()
-
     return render(request, 'administracion/form_cliente.html', {'form': form, 'accion': 'Crear'})
-
 
 @custom_login_required
 @role_required(allowed_roles=['Jefe de Ventas'])
@@ -167,9 +144,7 @@ def editar_cliente(request, rut):
             return redirect('listar_clientes')
     else:
         form = ClienteForm(instance=cliente)
-
     return render(request, 'administracion/form_cliente.html', {'form': form, 'accion': 'Editar'})
-
 
 @custom_login_required
 @role_required(allowed_roles=['Jefe de Ventas'])
@@ -180,17 +155,13 @@ def eliminar_cliente(request, rut):
         messages.success(request, 'Cliente eliminado exitosamente.')
     except Exception:
         messages.error(request, 'No se puede eliminar el cliente, está siendo usado en una venta.')
-
     return redirect('listar_clientes')
 
-
-# --- CRUD de Usuarios (Solo Jefe de Ventas) ---
 @custom_login_required
 @role_required(allowed_roles=['Jefe de Ventas'])
 def listar_usuarios(request):
     usuarios = Usuario.objects.all()
     return render(request, 'administracion/listar_usuarios.html', {'usuarios': usuarios})
-
 
 @custom_login_required
 @role_required(allowed_roles=['Jefe de Ventas'])
@@ -203,9 +174,7 @@ def crear_usuario(request):
             return redirect('listar_usuarios')
     else:
         form = UsuarioForm()
-
     return render(request, 'administracion/form_usuario.html', {'form': form, 'accion': 'Crear'})
-
 
 @custom_login_required
 @role_required(allowed_roles=['Jefe de Ventas'])
@@ -221,9 +190,7 @@ def editar_usuario(request, id_usuario):
         form = UsuarioForm(instance=usuario)
         form.fields['password'].widget = forms.PasswordInput(render_value=False)
         form.fields['password_confirm'].widget = forms.PasswordInput(render_value=False)
-
     return render(request, 'administracion/form_usuario.html', {'form': form, 'accion': 'Editar'})
-
 
 @custom_login_required
 @role_required(allowed_roles=['Jefe de Ventas'])
@@ -232,22 +199,19 @@ def eliminar_usuario(request, id_usuario):
     if usuario.id_usuario == request.session.get('usuario_id'):
         messages.error(request, 'No puedes eliminar tu propia cuenta de administrador.')
         return redirect('listar_usuarios')
-
     try:
         usuario.delete()
         messages.success(request, 'Usuario eliminado exitosamente.')
     except Exception:
         messages.error(request, 'No se puede eliminar el usuario, está asociado a ventas.')
-
     return redirect('listar_usuarios')
 
 
-# --- VISTA DE CONTROL DE DÍA (Solo Jefe de Ventas) ---
+# --- CONTROL DÍA ---
 @custom_login_required
 @role_required(allowed_roles=['Jefe de Ventas'])
 def control_dia(request):
     fecha_hoy_chile = timezone.localdate()
-
     control_hoy, created = ControlDia.objects.get_or_create(
         fecha=fecha_hoy_chile,
         defaults={'id_usuario_id': request.session.get('usuario_id')}
@@ -255,12 +219,10 @@ def control_dia(request):
     if request.method == 'POST':
         if control_hoy.estado == 'Cerrado':
             control_hoy.estado = 'Abierto'
-            # GUARDAR HORA EXACTA
             control_hoy.hora_apertura = timezone.localtime().time() 
             messages.success(request, f'El día ha sido ABIERTO a las {control_hoy.hora_apertura.strftime("%H:%M")}.')
         else:
             control_hoy.estado = 'Cerrado'
-            # Opcional: Podrías limpiar la hora de apertura si quieres, o dejarla como histórico
             messages.warning(request, 'El día ha sido CERRADO. No se registrarán nuevas ventas.')
         
         control_hoy.id_usuario_id = request.session.get('usuario_id')
@@ -269,15 +231,13 @@ def control_dia(request):
     return render(request, 'control/control_dia.html', {'control_hoy': control_hoy})
 
 
-# --- VISTA DE REGISTRO DE VENTAS (Vendedor) ---
+# --- CREAR VENTA (VENDEDOR) ---
 @custom_login_required
 @role_required(allowed_roles=['Vendedor', 'Jefe de Ventas'])
 @transaction.atomic
 def crear_venta(request):
-    # CORRECCION: Usar localdate()
     fecha_hoy_chile = timezone.localdate()
 
-    # 1. Verificar si el día está abierto
     try:
         control_hoy = ControlDia.objects.get(fecha=fecha_hoy_chile)
         if control_hoy.estado == 'Cerrado':
@@ -288,12 +248,12 @@ def crear_venta(request):
         return redirect('home')
     
     if request.method == 'POST':
-        # ... Procesar Venta (igual que antes) ...
         try:
             data = json.loads(request.body)
             tipo_documento = data.get('tipo_documento')
             folio_num = data.get('folio')
             
+            # Validación Folio
             if folio_num is not None:
                 try:
                     folio_num = int(folio_num)
@@ -304,18 +264,16 @@ def crear_venta(request):
                 folio_num = (max_folio_q['max_folio'] or 0) + 1
             
             cliente_id = data.get('cliente_id')
-            cliente_datos = data.get('cliente_datos') # Ahora recibimos esto siempre en Factura
+            cliente_datos = data.get('cliente_datos') # Datos del formulario
             productos_data = data.get('productos')
+            metodo_pago_seleccionado = data.get('metodo_pago', 'Efectivo') # Capturar Pago
 
-            # Validar Cliente
+            # Procesar Cliente
             cliente_obj = None
-            
             if tipo_documento == 'Factura':
                 if cliente_id:
-                    # CASO 1: CLIENTE EXISTENTE (Posible Actualización)
+                    # CLIENTE EXISTENTE (Verificar si hay cambios para actualizar)
                     cliente_obj = Cliente.objects.get(id=cliente_id)
-                    
-                    # Si vienen datos, actualizamos (excepto el RUT que asumimos es la llave)
                     if cliente_datos:
                         cambios = False
                         if cliente_obj.razon_social != cliente_datos.get('razon_social'):
@@ -329,11 +287,9 @@ def crear_venta(request):
                             cambios = True
                         
                         if cambios:
-                            cliente_obj.save() # Guardamos los cambios en la DB
-                            
+                            cliente_obj.save() # Guardar actualización
                 elif cliente_datos:
-                    # CASO 2: CLIENTE TOTALMENTE NUEVO
-                    # Usamos el form para validar
+                    # CLIENTE NUEVO
                     cliente_form = ClienteForm(cliente_datos)
                     if cliente_form.is_valid():
                         cliente_obj = cliente_form.save()
@@ -368,10 +324,7 @@ def crear_venta(request):
             iva = (subtotal_venta * Decimal('0.19')).quantize(Decimal('0.00'))
             total = subtotal_venta + iva
 
-            # 1. CAPTURAR EL MÉTODO DE PAGO (Si no viene, por defecto es Efectivo)
-            metodo_pago_seleccionado = data.get('metodo_pago', 'Efectivo')
-
-            # 2. CREAR LA VENTA CON EL MÉTODO DE PAGO
+            # Guardar Venta
             venta = Venta.objects.create(
                 tipo_documento=tipo_documento,
                 folio=folio_num,
@@ -381,7 +334,7 @@ def crear_venta(request):
                 id_usuario_id=request.session.get('usuario_id'),
                 id_cliente=cliente_obj,
                 id_control=control_hoy,
-                metodo_pago=metodo_pago_seleccionado  # <--- ¡AQUÍ ESTÁ LA MAGIA!
+                metodo_pago=metodo_pago_seleccionado # Guardar Metodo Pago
             )
 
             for detalle in detalles_venta:
@@ -421,13 +374,11 @@ def crear_venta(request):
         return render(request, 'ventas/crear_venta.html', context)
 
 
-# --- VISTA DE REPORTE DIARIO (Jefe de Ventas) ---
+# --- REPORTE DIARIO ---
 @custom_login_required
 @role_required(allowed_roles=['Jefe de Ventas'])
 def reporte_diario(request):
     fecha_str = request.GET.get('fecha')
-    
-    # CORRECCION: Obtener "HOY" según Chile
     hoy_chile = timezone.localdate()
 
     if fecha_str:
@@ -439,7 +390,6 @@ def reporte_diario(request):
     else:
         fecha_reporte = hoy_chile
 
-    # Generar datetime aware (con zona horaria) para el filtro
     start_of_day = timezone.make_aware(datetime.combine(fecha_reporte, time.min))
     end_of_day = timezone.make_aware(datetime.combine(fecha_reporte, time.max))
 
@@ -455,6 +405,12 @@ def reporte_diario(request):
         total=Sum('total')
     ).order_by('id_usuario__username')
 
+    # NUEVO: Agrupación por Método de Pago
+    total_por_pago = ventas_dia.values('metodo_pago').annotate(
+        cantidad=Count('id_venta'),
+        total=Sum('total')
+    ).order_by('-total')
+
     totales_generales = ventas_dia.aggregate(
         total_neto=Sum('subtotal'),
         total_iva=Sum('iva'),
@@ -466,6 +422,7 @@ def reporte_diario(request):
         'fecha_reporte': fecha_reporte,
         'total_por_documento': total_por_documento,
         'total_por_vendedor': total_por_vendedor,
+        'total_por_pago': total_por_pago, # Agregar al contexto
         'totales_generales': totales_generales,
         'ventas_dia': ventas_dia.order_by('-fecha'),
     }
@@ -484,7 +441,7 @@ def get_next_folio(request):
     return JsonResponse({'next_folio': next_folio})
 
 
-# --- API PARA OBTENER DETALLE DE VENTA (AJAX) ---
+# --- API VOUCHER (AJAX) ---
 @custom_login_required
 def obtener_detalle_venta(request, id_venta):
     try:
@@ -507,7 +464,7 @@ def obtener_detalle_venta(request, id_venta):
             'vendedor': venta.id_usuario.username.title(),
             'cliente': venta.id_cliente.razon_social if venta.id_cliente else "Público General",
             'total': int(venta.total),
-            'metodo_pago': venta.metodo_pago,
+            'metodo_pago': venta.metodo_pago, # Agregar método pago
             'items': items,
             'status': 'success'
         }
