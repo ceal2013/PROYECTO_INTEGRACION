@@ -500,7 +500,7 @@ def obtener_detalle_venta(request, id_venta):
             'tipo': venta.tipo_documento,
             'fecha': venta.fecha.strftime("%d/%m/%Y %H:%M"),
             'vendedor': venta.id_usuario.username.title(),
-            'cliente': venta.id_cliente.nombre_completo if venta.id_cliente else "Público General",
+            'cliente': venta.id_cliente.razon_social if venta.id_cliente else "Público General",
             'total': int(venta.total),
             'items': items,
             'status': 'success'

@@ -277,9 +277,9 @@
                                 {% endif %}
                             </td>
                             <td class="fw-bold">#{{ venta.folio }}</td>
-                            <td>
+                            <td style="white-space: normal; max-width: 250px;">
                                 {% if venta.id_cliente %}
-                                    {{ venta.id_cliente.nombre_completo|default:venta.id_cliente.razon_social|truncatechars:20 }}
+                                    <strong>{{ venta.id_cliente.razon_social }}</strong>
                                 {% else %}
                                     <span class="text-muted fst-italic">Público General</span>
                                 {% endif %}
