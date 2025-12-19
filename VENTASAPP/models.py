@@ -104,6 +104,8 @@ class Venta(models.Model):
     id_usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     id_cliente = models.ForeignKey(Cliente, on_delete=models.PROTECT, null=True, blank=True)
     id_control = models.ForeignKey(ControlDia, on_delete=models.PROTECT)
+    # AGREGAR ESTE NUEVO CAMPO:
+    metodo_pago = models.CharField(max_length=50, default='Efectivo')
 
     class Meta:
         unique_together = ('tipo_documento', 'folio')
