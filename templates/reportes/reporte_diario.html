@@ -2,7 +2,7 @@
 {% block content %}
 
 <style>
-    /* Estilos Premium (Mismos del Dashboard) */
+    /* Estilos Premium */
     .hover-lift {
         transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
@@ -62,7 +62,6 @@
                 </div>
             </div>
         </div>
-        
         <div class="col-md-3">
             <div class="card shadow-sm border-0 border-top border-4 border-info h-100 hover-lift">
                 <div class="card-body">
@@ -76,7 +75,6 @@
                 </div>
             </div>
         </div>
-        
         <div class="col-md-3">
             <div class="card shadow-sm border-0 border-top border-4 border-warning h-100 hover-lift">
                 <div class="card-body">
@@ -90,7 +88,6 @@
                 </div>
             </div>
         </div>
-
         <div class="col-md-3">
             <div class="card shadow-sm border-0 border-top border-4 border-primary h-100 hover-lift">
                 <div class="card-body">
@@ -215,7 +212,9 @@
                             <td>{{ venta.id_usuario.username|title }}</td>
                             <td class="text-end fw-bold text-success">${{ venta.total|floatformat:0 }}</td>
                             <td class="text-center">
-                                <button type="button" class="btn btn-sm btn-outline-primary" title="Ver Voucher / Detalle">
+                                <button type="button" class="btn btn-sm btn-outline-primary" 
+                                        onclick="verVoucher({{ venta.id_venta }})" 
+                                        title="Ver Voucher">
                                     <i class="bi bi-eye-fill"></i>
                                 </button>
                             </td>
@@ -235,4 +234,104 @@
     </div>
 
 </div>
+
+<div class="modal fade" id="modalVoucher" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-receipt me-2"></i>Detalle de Venta
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="bg-light p-3 border-bottom text-center">
+                    <h4 class="fw-bold m-0 text-primary" id="v_tipo_folio">Boleta #000</h4>
+                    <small class="text-muted" id="v_fecha">Fecha: --/--/----</small>
+                </div>
+                
+                <div class="p-3 border-bottom small">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="text-muted">Cliente:</span>
+                        <span class="fw-bold" id="v_cliente">---</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Vendedor:</span>
+                        <span class="fw-bold" id="v_vendedor">---</span>
+                    </div>
+                </div>
+
+                <div class="table-responsive" style="max-height: 300px;">
+                    <table class="table table-sm table-striped mb-0 small">
+                        <thead class="table-light sticky-top">
+                            <tr>
+                                <th class="ps-3">Producto</th>
+                                <th class="text-center">Cant.</th>
+                                <th class="text-end pe-3">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody id="v_tabla_items">
+                            </tbody>
+                    </table>
+                </div>
+                
+                <div class="p-3 bg-primary bg-opacity-10 text-end">
+                    <h5 class="m-0 fw-bold text-primary">Total: <span id="v_total">$0</span></h5>
+                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary btn-sm" onclick="window.print()">
+                    <i class="bi bi-printer me-2"></i>Imprimir
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function verVoucher(idVenta) {
+        // 1. Mostrar modal vacío o cargando
+        const modalEl = document.getElementById('modalVoucher');
+        const modal = new bootstrap.Modal(modalEl);
+        
+        // Limpiar datos anteriores
+        document.getElementById('v_tabla_items').innerHTML = '<tr><td colspan="3" class="text-center">Cargando...</td></tr>';
+        modal.show();
+
+        // 2. Pedir datos al servidor (URL creada en urls.py)
+        fetch(`/api/detalle_venta/${idVenta}/`)
+            .then(response => response.json())
+            .then(data => {
+                if(data.status === 'success'){
+                    // Llenar Encabezado
+                    document.getElementById('v_tipo_folio').innerText = `${data.tipo} #${data.folio}`;
+                    document.getElementById('v_fecha').innerText = data.fecha;
+                    document.getElementById('v_cliente').innerText = data.cliente;
+                    document.getElementById('v_vendedor').innerText = data.vendedor;
+                    document.getElementById('v_total').innerText = '$' + data.total.toLocaleString('es-CL');
+
+                    // Llenar Tabla
+                    let htmlItems = '';
+                    data.items.forEach(item => {
+                        htmlItems += `
+                            <tr>
+                                <td class="ps-3">${item.producto}</td>
+                                <td class="text-center">${item.cantidad}</td>
+                                <td class="text-end pe-3">$${item.subtotal.toLocaleString('es-CL')}</td>
+                            </tr>
+                        `;
+                    });
+                    document.getElementById('v_tabla_items').innerHTML = htmlItems;
+                } else {
+                    alert('Error al cargar la venta');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('v_tabla_items').innerHTML = '<tr><td colspan="3" class="text-center text-danger">Error de conexión</td></tr>';
+            });
+    }
+</script>
+
 {% endblock %}

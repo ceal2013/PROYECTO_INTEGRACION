@@ -456,3 +456,34 @@ def get_next_folio(request):
     next_folio = (max_folio['max_folio'] or 0) + 1
 
     return JsonResponse({'next_folio': next_folio})
+
+
+# --- API PARA OBTENER DETALLE DE VENTA (AJAX) ---
+@custom_login_required
+def obtener_detalle_venta(request, id_venta):
+    try:
+        venta = Venta.objects.get(id_venta=id_venta)
+        detalles = DetalleVenta.objects.filter(id_venta=venta)
+        
+        items = []
+        for d in detalles:
+            items.append({
+                'producto': d.id_producto.nombre,
+                'cantidad': d.cantidad,
+                'precio': int(d.precio_unitario),
+                'subtotal': int(d.subtotal)
+            })
+            
+        data = {
+            'folio': venta.folio,
+            'tipo': venta.tipo_documento,
+            'fecha': venta.fecha.strftime("%d/%m/%Y %H:%M"),
+            'vendedor': venta.id_usuario.username.title(),
+            'cliente': venta.id_cliente.nombre_completo if venta.id_cliente else "Público General",
+            'total': int(venta.total),
+            'items': items,
+            'status': 'success'
+        }
+        return JsonResponse(data)
+    except Venta.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Venta no encontrada'})
