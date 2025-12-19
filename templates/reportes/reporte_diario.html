@@ -2,68 +2,6 @@
 {% block content %}
 
 <style>
-    /* --- ESTILOS DE IMPRESIÓN (VERTICAL Y 1 HOJA) --- */
-    @media print {
-        /* 1. Configuración de la Hoja Física */
-        @page {
-            size: portrait; /* Fuerza Vertical */
-            margin: 0mm;    /* Elimina márgenes de la impresora */
-        }
-
-        /* 2. Resetear HTML y Body para borrar "fantasmas" */
-        html, body {
-            width: 100%;
-            height: 100%;
-            margin: 0 !important;
-            padding: 0 !important;
-            overflow: hidden !important; /* Clave para evitar hoja 2 */
-            visibility: hidden !important;
-            background-color: white !important;
-        }
-
-        /* 3. Rescatar y Posicionar el Voucher */
-        #modalVoucher {
-            visibility: visible !important;
-            position: absolute !important;
-            left: 0 !important;
-            top: 0 !important;
-            width: 100% !important;
-            margin: 0 !important;
-            padding: 0 !important;
-        }
-
-        /* 4. Anular estilos de centrado de Bootstrap (Causa del espacio blanco) */
-        #modalVoucher .modal-dialog {
-            margin: 0 !important;
-            padding: 0 !important;
-            max-width: 100% !important;
-            transform: none !important; /* Quita el centrado visual */
-            display: block !important;
-        }
-
-        #modalVoucher .modal-content {
-            border: none !important;
-            box-shadow: none !important;
-            padding: 10mm !important; /* Margen interno para que no se pegue al borde */
-        }
-
-        #modalVoucher * {
-            visibility: visible !important;
-        }
-
-        /* 5. Ocultar elementos innecesarios */
-        .modal-header, .modal-footer, .btn-close {
-            display: none !important;
-        }
-        
-        /* 6. Ajuste de textos para impresión */
-        .table {
-            color: black !important;
-        }
-        h4, h5, small, span, div {
-            color: black !important; /* Fuerza color negro para impresoras térmicas */
-        }
-    }
     /* Estilos Premium */
     .hover-lift {
         transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -84,6 +22,29 @@
     .bg-icon-primary { background-color: rgba(13, 110, 253, 0.1); color: #0d6efd; }
     .bg-icon-info { background-color: rgba(13, 202, 240, 0.1); color: #0dcaf0; }
     .bg-icon-warning { background-color: rgba(255, 193, 7, 0.1); color: #ffc107; }
+
+    /* --- ESTILOS DE IMPRESIÓN (VERTICAL Y 1 HOJA) --- */
+    @media print {
+        @page { size: portrait; margin: 0mm; }
+        html, body {
+            width: 100%; height: 100%; margin: 0 !important; padding: 0 !important;
+            overflow: hidden !important; visibility: hidden !important; background-color: white !important;
+        }
+        #modalVoucher {
+            visibility: visible !important; position: absolute !important;
+            left: 0 !important; top: 0 !important; width: 100% !important;
+            margin: 0 !important; padding: 0 !important;
+        }
+        #modalVoucher .modal-dialog {
+            margin: 0 !important; padding: 0 !important; max-width: 100% !important;
+            transform: none !important; display: block !important;
+        }
+        #modalVoucher .modal-content {
+            border: none !important; box-shadow: none !important; padding: 5mm !important;
+        }
+        #modalVoucher * { visibility: visible !important; color: black !important; }
+        .modal-header, .modal-footer, .btn-close { display: none !important; }
+    }
 </style>
 
 <div class="container-fluid">
@@ -174,11 +135,7 @@
                 <div class="card-body p-0">
                     <table class="table table-hover mb-0 align-middle">
                         <thead class="table-light">
-                            <tr>
-                                <th>Tipo</th>
-                                <th class="text-center">Cant.</th>
-                                <th class="text-end">Total</th>
-                            </tr>
+                            <tr><th>Tipo</th><th class="text-center">Cant.</th><th class="text-end">Total</th></tr>
                         </thead>
                         <tbody>
                             {% for doc in total_por_documento %}
@@ -203,11 +160,7 @@
                 <div class="card-body p-0">
                     <table class="table table-hover mb-0 align-middle">
                         <thead class="table-light">
-                            <tr>
-                                <th>Vendedor</th>
-                                <th class="text-center">Cant.</th>
-                                <th class="text-end">Total</th>
-                            </tr>
+                            <tr><th>Vendedor</th><th class="text-center">Cant.</th><th class="text-end">Total</th></tr>
                         </thead>
                         <tbody>
                             {% for vend in total_por_vendedor %}
@@ -241,13 +194,9 @@
                 </div>
                 <div class="col-md-6">
                     <div class="input-group input-group-sm">
-                        <span class="input-group-text bg-light border-end-0">
-                            <i class="bi bi-search text-muted"></i>
-                        </span>
+                        <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
                         <input type="text" id="buscadorVentas" class="form-control border-start-0" placeholder="Buscar por folio, cliente, tipo...">
-                        <span class="input-group-text bg-primary text-white">
-                            {{ ventas_dia|length }} Ventas
-                        </span>
+                        <span class="input-group-text bg-primary text-white">{{ ventas_dia|length }} Ventas</span>
                     </div>
                 </div>
             </div>
@@ -259,7 +208,7 @@
                         <tr>
                             <th>Tipo</th>
                             <th>Folio</th>
-                            <th>Cliente</th>
+                            <th>Pago</th> <th>Cliente</th>
                             <th>Vendedor</th>
                             <th>Hora</th>
                             <th class="text-end">Monto Total</th>
@@ -277,6 +226,15 @@
                                 {% endif %}
                             </td>
                             <td class="fw-bold">#{{ venta.folio }}</td>
+                            <td>
+                                {% if venta.metodo_pago == 'Efectivo' %}
+                                    <span class="badge bg-success bg-opacity-10 text-success border border-success">Efectivo</span>
+                                {% elif venta.metodo_pago == 'Tarjeta' %}
+                                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary">Tarjeta</span>
+                                {% else %}
+                                    <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary">{{ venta.metodo_pago }}</span>
+                                {% endif %}
+                            </td>
                             <td style="white-space: normal; max-width: 250px;">
                                 {% if venta.id_cliente %}
                                     <strong>{{ venta.id_cliente.razon_social }}</strong>
@@ -289,35 +247,26 @@
                             <td class="text-end fw-bold text-success">${{ venta.total|floatformat:0 }}</td>
                             <td class="text-center">
                                 <button type="button" class="btn btn-sm btn-outline-primary" 
-                                        onclick="verVoucher({{ venta.id_venta }})" 
-                                        title="Ver Voucher">
+                                        onclick="verVoucher({{ venta.id_venta }})" title="Ver Voucher">
                                     <i class="bi bi-eye-fill"></i>
                                 </button>
                             </td>
                         </tr>
                         {% empty %}
-                        <tr>
-                            <td colspan="7" class="text-center py-5">
-                                <i class="bi bi-inbox text-muted" style="font-size: 2rem;"></i>
-                                <p class="text-muted mt-2">No se han registrado ventas en esta fecha.</p>
-                            </td>
-                        </tr>
+                        <tr><td colspan="8" class="text-center py-5"><i class="bi bi-inbox text-muted fs-1"></i><p class="text-muted mt-2">Sin ventas.</p></td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
-
 </div>
 
 <div class="modal fade" id="modalVoucher" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title fw-bold">
-                    <i class="bi bi-receipt me-2"></i>Detalle de Venta
-                </h5>
+                <h5 class="modal-title fw-bold"><i class="bi bi-receipt me-2"></i>Detalle de Venta</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-0">
@@ -327,22 +276,19 @@
                 </div>
                 <div class="p-3 border-bottom small">
                     <div class="d-flex justify-content-between mb-1">
-                        <span class="text-muted">Cliente:</span>
-                        <span class="fw-bold" id="v_cliente">---</span>
+                        <span class="text-muted">Cliente:</span><span class="fw-bold text-end" style="max-width: 200px;" id="v_cliente">---</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="text-muted">Vendedor:</span><span class="fw-bold" id="v_vendedor">---</span>
                     </div>
                     <div class="d-flex justify-content-between">
-                        <span class="text-muted">Vendedor:</span>
-                        <span class="fw-bold" id="v_vendedor">---</span>
+                        <span class="text-muted">Pago:</span><span class="fw-bold text-uppercase" id="v_metodo_pago">---</span>
                     </div>
                 </div>
                 <div class="table-responsive" style="max-height: 300px;">
                     <table class="table table-sm table-striped mb-0 small">
                         <thead class="table-light sticky-top">
-                            <tr>
-                                <th class="ps-3">Producto</th>
-                                <th class="text-center">Cant.</th>
-                                <th class="text-end pe-3">Subtotal</th>
-                            </tr>
+                            <tr><th class="ps-3">Producto</th><th class="text-center">Cant.</th><th class="text-end pe-3">Subtotal</th></tr>
                         </thead>
                         <tbody id="v_tabla_items"></tbody>
                     </table>
@@ -362,26 +308,17 @@
 </div>
 
 <script>
-    // LÓGICA DEL BUSCADOR INSTANTÁNEO
+    // BUSCADOR
     document.getElementById('buscadorVentas').addEventListener('keyup', function() {
         let texto = this.value.toLowerCase();
-        let tabla = document.getElementById('tablaVentas');
-        let filas = tabla.getElementsByTagName('tr');
-
-        // Empezamos desde 1 para saltar el encabezado
-        for (let i = 1; i < filas.length; i++) {
-            let fila = filas[i];
-            let contenido = fila.innerText.toLowerCase();
-            
-            if (contenido.includes(texto)) {
-                fila.style.display = '';
-            } else {
-                fila.style.display = 'none';
-            }
+        let filas = document.getElementById('tablaVentas').getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+        for (let i = 0; i < filas.length; i++) {
+            let contenido = filas[i].innerText.toLowerCase();
+            filas[i].style.display = contenido.includes(texto) ? '' : 'none';
         }
     });
 
-    // LÓGICA DEL MODAL
+    // CARGAR VOUCHER
     function verVoucher(idVenta) {
         const modalEl = document.getElementById('modalVoucher');
         const modal = new bootstrap.Modal(modalEl);
@@ -389,35 +326,26 @@
         modal.show();
 
         fetch(`/api/detalle_venta/${idVenta}/`)
-            .then(response => response.json())
+            .then(r => r.json())
             .then(data => {
                 if(data.status === 'success'){
                     document.getElementById('v_tipo_folio').innerText = `${data.tipo} #${data.folio}`;
                     document.getElementById('v_fecha').innerText = data.fecha;
                     document.getElementById('v_cliente').innerText = data.cliente;
                     document.getElementById('v_vendedor').innerText = data.vendedor;
-                    document.getElementById('v_total').innerText = '$' + data.total.toLocaleString('es-CL');
+                    
+                    // MOSTRAR MÉTODO DE PAGO
+                    document.getElementById('v_metodo_pago').innerText = data.metodo_pago || 'Efectivo'; 
 
-                    let htmlItems = '';
-                    data.items.forEach(item => {
-                        htmlItems += `
-                            <tr>
-                                <td class="ps-3">${item.producto}</td>
-                                <td class="text-center">${item.cantidad}</td>
-                                <td class="text-end pe-3">$${item.subtotal.toLocaleString('es-CL')}</td>
-                            </tr>
-                        `;
+                    document.getElementById('v_total').innerText = '$' + data.total.toLocaleString('es-CL');
+                    let html = '';
+                    data.items.forEach(i => {
+                        html += `<tr><td class="ps-3">${i.producto}</td><td class="text-center">${i.cantidad}</td><td class="text-end pe-3">$${i.subtotal.toLocaleString('es-CL')}</td></tr>`;
                     });
-                    document.getElementById('v_tabla_items').innerHTML = htmlItems;
-                } else {
-                    alert('Error al cargar la venta');
-                }
+                    document.getElementById('v_tabla_items').innerHTML = html;
+                } else { alert('Error al cargar'); }
             })
-            .catch(error => {
-                console.error('Error:', error);
-                document.getElementById('v_tabla_items').innerHTML = '<tr><td colspan="3" class="text-center text-danger">Error de conexión</td></tr>';
-            });
+            .catch(e => { console.error(e); document.getElementById('v_tabla_items').innerHTML = '<tr><td colspan="3" class="text-center text-danger">Error de conexión</td></tr>'; });
     }
 </script>
-
 {% endblock %}

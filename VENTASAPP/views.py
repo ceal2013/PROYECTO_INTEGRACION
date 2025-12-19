@@ -507,6 +507,7 @@ def obtener_detalle_venta(request, id_venta):
             'vendedor': venta.id_usuario.username.title(),
             'cliente': venta.id_cliente.razon_social if venta.id_cliente else "Público General",
             'total': int(venta.total),
+            'metodo_pago': venta.metodo_pago,
             'items': items,
             'status': 'success'
         }
