@@ -2,46 +2,54 @@
 {% block content %}
 
 <style>
-    /* --- ESTILOS DE IMPRESIÓN (Solo se activan al imprimir) --- */
+    /* --- ESTILOS DE IMPRESIÓN CORREGIDOS --- */
     @media print {
-        /* 1. Ocultar TODO lo que no sea el ticket */
-        body * {
-            visibility: hidden;
-        }
-        
-        /* 2. Ocultar elementos decorativos del navegador */
-        @page {
-            margin: 0;
-            size: auto;
-        }
-
-        /* 3. Hacer visible SOLO el contenido del modal */
-        #modalVoucher, #modalVoucher * {
-            visibility: visible;
-        }
-
-        /* 4. Posicionar el ticket al inicio de la hoja */
-        #modalVoucher {
-            position: absolute;
-            left: 0;
-            top: 0;
-            margin: 0;
-            padding: 0;
-            width: 100%;
+        /* 1. Ocultar TODO el contenido del sitio */
+        body {
+            visibility: hidden !important;
             background-color: white !important;
-            border: none !important;
-        }
-        
-        /* 5. Ocultar botones del modal (Cerrar/Imprimir) en el papel */
-        .modal-footer, .btn-close {
-            display: none !important;
+            height: auto !important;
+            width: 100% !important;
+            overflow: visible !important;
         }
 
-        /* 6. Ajuste para que parezca ticket real (Opcional: ancho fijo si usas térmica) */
-        .modal-content {
+        /* 2. Rescatar el MODAL y hacerlo visible */
+        #modalVoucher {
+            visibility: visible !important;
+            position: absolute !important; /* Fuerza bruta: sacar del flujo normal */
+            left: 0 !important;
+            top: 0 !important;
+            margin: 0 !important;
+            padding: 10px !important; /* Un poco de aire */
+            width: 100% !important;
+            height: auto !important;
+            z-index: 9999 !important; /* Poner encima de todo */
+        }
+
+        /* 3. Asegurar que los hijos del modal (textos, tablas) sean visibles */
+        #modalVoucher * {
+            visibility: visible !important;
+        }
+
+        /* 4. Limpieza visual: Quitar sombras, bordes y botones */
+        .modal-dialog {
+            margin: 0 !important;
+            padding: 0 !important;
+            max-width: 100% !important;
             box-shadow: none !important;
+        }
+        .modal-content {
             border: none !important;
-            width: 100% !important; /* O cambiar a 80mm si es térmica */
+            box-shadow: none !important;
+        }
+        .modal-footer, .btn-close, .modal-header button {
+            display: none !important; /* Adiós botones */
+        }
+        
+        /* 5. Ajuste para impresora (Evita página en blanco extra) */
+        @page {
+            margin: 5mm; /* Margen pequeño de seguridad */
+            size: auto;  /* Se adapta al papel (Carta o Térmico) */
         }
     }
     /* Estilos Premium */
