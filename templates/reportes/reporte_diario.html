@@ -1,119 +1,231 @@
 {% extends 'base_layout.html' %}
 {% block content %}
 
-<div class="card mb-4">
-    <div class="card-body">
-        <form method="GET" action="{% url 'reporte_diario' %}" class="row g-3 align-items-end">
-            <div class="col-md-4">
-                <label for="fecha" class="form-label">Seleccionar Fecha del Reporte</label>
-                <input type="date" class="form-control" id="fecha" name="fecha" value="{{ fecha_reporte|date:'Y-m-d' }}">
-            </div>
-            <div class="col-md-4">
-                <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-search me-2"></i>Filtrar
-                </button>
-                <a href="{% url 'reporte_diario' %}" class="btn btn-secondary ms-2">Ver Hoy</a>
-            </div>
-        </form>
-    </div>
-</div>
+<style>
+    /* Estilos Premium (Mismos del Dashboard) */
+    .hover-lift {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .hover-lift:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    .icon-circle-sm {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+    }
+    .bg-icon-success { background-color: rgba(25, 135, 84, 0.1); color: #198754; }
+    .bg-icon-primary { background-color: rgba(13, 110, 253, 0.1); color: #0d6efd; }
+    .bg-icon-info { background-color: rgba(13, 202, 240, 0.1); color: #0dcaf0; }
+    .bg-icon-warning { background-color: rgba(255, 193, 7, 0.1); color: #ffc107; }
+</style>
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="card-title">Reporte de Ventas</h2>
-    <h4 class="text-muted">Fecha: {{ fecha_reporte|date:"d/m/Y" }}</h4>
-</div>
+<div class="container-fluid">
 
-<div class="row">
-    <div class="col-md-3">
-        <div class="card text-white bg-success mb-3">
-            <div class="card-header">Total Recaudado</div>
-            <div class="card-body">
-                <h3 class="card-title text-white">${{ totales_generales.total_recaudado|default:0|floatformat:0 }}</h3>
-            </div>
+    <div class="card mb-4 shadow-sm border-0 border-start border-4 border-primary">
+        <div class="card-body py-3">
+            <form method="GET" action="{% url 'reporte_diario' %}" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label for="fecha" class="form-label fw-bold text-muted small text-uppercase">Fecha del Reporte</label>
+                    <input type="date" class="form-control" id="fecha" name="fecha" value="{{ fecha_reporte|date:'Y-m-d' }}">
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="bi bi-search me-2"></i>Filtrar
+                    </button>
+                    <a href="{% url 'reporte_diario' %}" class="btn btn-outline-secondary ms-2">Ver Hoy</a>
+                </div>
+                <div class="col-md-4 text-end">
+                    <h5 class="text-muted mb-0">Reporte del:</h5>
+                    <h3 class="fw-bold text-primary mb-0">{{ fecha_reporte|date:"d \d\e F \d\e Y"|title }}</h3>
+                </div>
+            </form>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card bg-light mb-3">
-            <div class="card-header">Total Neto (Sin IVA)</div>
-            <div class="card-body">
-                <h3 class="card-title">${{ totales_generales.total_neto|default:0|floatformat:0 }}</h3>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-light mb-3">
-            <div class="card-header">Total IVA</div>
-            <div class="card-body">
-                <h3 class="card-title">${{ totales_generales.total_iva|default:0|floatformat:0 }}</h3>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-light mb-3">
-            <div class="card-header">Cantidad de Ventas</div>
-            <div class="card-body">
-                <h3 class="card-title">{{ totales_generales.cantidad_ventas|default:0 }}</h3>
-            </div>
-        </div>
-    </div>
-</div>
 
-<div class="row">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5>Desglose por Tipo de Documento</h5>
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 border-top border-4 border-success h-100 hover-lift">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted small text-uppercase fw-bold">Total Recaudado</span>
+                        <div class="icon-circle-sm bg-icon-success">
+                            <i class="bi bi-cash-stack"></i>
+                        </div>
+                    </div>
+                    <h2 class="card-title fw-bold text-success mb-0">${{ totales_generales.total_recaudado|default:0|floatformat:0 }}</h2>
+                    <small class="text-muted">Ingreso bruto</small>
+                </div>
             </div>
-            <div class="card-body">
-                <table class="table table-striped">
-                    <thead>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 border-top border-4 border-info h-100 hover-lift">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted small text-uppercase fw-bold">Neto (Sin IVA)</span>
+                        <div class="icon-circle-sm bg-icon-info">
+                            <i class="bi bi-wallet2"></i>
+                        </div>
+                    </div>
+                    <h3 class="card-title fw-bold text-dark mb-0">${{ totales_generales.total_neto|default:0|floatformat:0 }}</h3>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 border-top border-4 border-warning h-100 hover-lift">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted small text-uppercase fw-bold">IVA (19%)</span>
+                        <div class="icon-circle-sm bg-icon-warning">
+                            <i class="bi bi-percent"></i>
+                        </div>
+                    </div>
+                    <h3 class="card-title fw-bold text-dark mb-0">${{ totales_generales.total_iva|default:0|floatformat:0 }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 border-top border-4 border-primary h-100 hover-lift">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted small text-uppercase fw-bold">N° Ventas</span>
+                        <div class="icon-circle-sm bg-icon-primary">
+                            <i class="bi bi-receipt"></i>
+                        </div>
+                    </div>
+                    <h3 class="card-title fw-bold text-dark mb-0">{{ totales_generales.cantidad_ventas|default:0 }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6 mb-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white py-3">
+                    <h6 class="m-0 fw-bold text-secondary"><i class="bi bi-file-earmark-text me-2"></i>Por Tipo de Documento</h6>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Tipo</th>
+                                <th class="text-center">Cant.</th>
+                                <th class="text-end">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for doc in total_por_documento %}
+                            <tr>
+                                <td><span class="badge bg-light text-dark border">{{ doc.tipo_documento }}</span></td>
+                                <td class="text-center">{{ doc.cantidad }}</td>
+                                <td class="text-end fw-bold text-success">${{ doc.total|floatformat:0 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="3" class="text-center py-3 text-muted">Sin datos.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white py-3">
+                    <h6 class="m-0 fw-bold text-secondary"><i class="bi bi-person-badge me-2"></i>Por Vendedor</h6>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Vendedor</th>
+                                <th class="text-center">Cant.</th>
+                                <th class="text-end">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for vend in total_por_vendedor %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="rounded-circle bg-secondary text-white d-flex justify-content-center align-items-center me-2" style="width:30px; height:30px; font-size:0.8rem;">
+                                            {{ vend.id_usuario__username|first|upper }}
+                                        </div>
+                                        {{ vend.id_usuario__username|title }}
+                                    </div>
+                                </td>
+                                <td class="text-center">{{ vend.cantidad }}</td>
+                                <td class="text-end fw-bold text-success">${{ vend.total|floatformat:0 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="3" class="text-center py-3 text-muted">Sin datos.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 mb-5">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 fw-bold text-primary"><i class="bi bi-list-ul me-2"></i>Detalle de Transacciones</h6>
+            <span class="badge bg-primary rounded-pill">{{ ventas_dia|length }} Ventas</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
                         <tr>
+                            <th>Hora</th>
+                            <th>Folio</th>
                             <th>Tipo</th>
-                            <th>Cantidad</th>
-                            <th>Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for doc in total_por_documento %}
-                        <tr>
-                            <td><strong>{{ doc.tipo_documento }}</strong></td>
-                            <td>{{ doc.cantidad }}</td>
-                            <td>${{ doc.total|floatformat:0 }}</td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="3" class="text-center">Sin ventas para esta fecha.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5>Desglose por Vendedor</h5>
-            </div>
-            <div class="card-body">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
+                            <th>Cliente</th>
                             <th>Vendedor</th>
-                            <th>Cantidad</th>
-                            <th>Total</th>
+                            <th class="text-end">Monto Total</th>
+                            <th class="text-center">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for vend in total_por_vendedor %}
+                        {% for venta in ventas_dia %}
                         <tr>
-                            <td><strong>{{ vend.id_usuario__username }}</strong></td>
-                            <td>{{ vend.cantidad }}</td>
-                            <td>${{ vend.total|floatformat:0 }}</td>
+                            <td class="text-muted small"><i class="bi bi-clock me-1"></i>{{ venta.fecha|date:"H:i" }}</td>
+                            <td class="fw-bold">#{{ venta.folio }}</td>
+                            <td>
+                                {% if venta.tipo_documento == 'Boleta' %}
+                                    <span class="badge bg-warning text-dark bg-opacity-25 border border-warning">Boleta</span>
+                                {% else %}
+                                    <span class="badge bg-info text-dark bg-opacity-25 border border-info">Factura</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if venta.id_cliente %}
+                                    {{ venta.id_cliente.nombre_completo|default:venta.id_cliente.razon_social|truncatechars:20 }}
+                                {% else %}
+                                    <span class="text-muted fst-italic">Público General</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ venta.id_usuario.username|title }}</td>
+                            <td class="text-end fw-bold text-success">${{ venta.total|floatformat:0 }}</td>
+                            <td class="text-center">
+                                <button type="button" class="btn btn-sm btn-outline-primary" title="Ver Voucher / Detalle">
+                                    <i class="bi bi-eye-fill"></i>
+                                </button>
+                            </td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="3" class="text-center">Sin ventas para esta fecha.</td>
+                            <td colspan="7" class="text-center py-5">
+                                <i class="bi bi-inbox text-muted" style="font-size: 2rem;"></i>
+                                <p class="text-muted mt-2">No se han registrado ventas en esta fecha.</p>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -121,6 +233,6 @@
             </div>
         </div>
     </div>
-</div>
 
+</div>
 {% endblock %}

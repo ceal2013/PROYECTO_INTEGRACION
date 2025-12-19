@@ -441,6 +441,7 @@ def reporte_diario(request):
         'total_por_documento': total_por_documento,
         'total_por_vendedor': total_por_vendedor,
         'totales_generales': totales_generales,
+        'ventas_dia': ventas_dia.order_by('-fecha'),
     }
 
     return render(request, 'reportes/reporte_diario.html', context)
