@@ -172,20 +172,34 @@
     </div>
 
     <div class="card shadow-sm border-0 mb-5">
-        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-            <h6 class="m-0 fw-bold text-primary"><i class="bi bi-list-ul me-2"></i>Detalle de Transacciones</h6>
-            <span class="badge bg-primary rounded-pill">{{ ventas_dia|length }} Ventas</span>
+        <div class="card-header bg-white py-3">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h6 class="m-0 fw-bold text-primary"><i class="bi bi-list-ul me-2"></i>Detalle de Transacciones</h6>
+                </div>
+                <div class="col-md-6">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-light border-end-0">
+                            <i class="bi bi-search text-muted"></i>
+                        </span>
+                        <input type="text" id="buscadorVentas" class="form-control border-start-0" placeholder="Buscar por folio, cliente, tipo...">
+                        <span class="input-group-text bg-primary text-white">
+                            {{ ventas_dia|length }} Ventas
+                        </span>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+                <table class="table table-hover align-middle mb-0" id="tablaVentas">
                     <thead class="table-light">
                         <tr>
-                            <th>Hora</th>
-                            <th>Folio</th>
                             <th>Tipo</th>
+                            <th>Folio</th>
                             <th>Cliente</th>
                             <th>Vendedor</th>
+                            <th>Hora</th>
                             <th class="text-end">Monto Total</th>
                             <th class="text-center">Acciones</th>
                         </tr>
@@ -193,8 +207,6 @@
                     <tbody>
                         {% for venta in ventas_dia %}
                         <tr>
-                            <td class="text-muted small"><i class="bi bi-clock me-1"></i>{{ venta.fecha|date:"H:i" }}</td>
-                            <td class="fw-bold">#{{ venta.folio }}</td>
                             <td>
                                 {% if venta.tipo_documento == 'Boleta' %}
                                     <span class="badge bg-warning text-dark bg-opacity-25 border border-warning">Boleta</span>
@@ -202,6 +214,7 @@
                                     <span class="badge bg-info text-dark bg-opacity-25 border border-info">Factura</span>
                                 {% endif %}
                             </td>
+                            <td class="fw-bold">#{{ venta.folio }}</td>
                             <td>
                                 {% if venta.id_cliente %}
                                     {{ venta.id_cliente.nombre_completo|default:venta.id_cliente.razon_social|truncatechars:20 }}
@@ -210,6 +223,7 @@
                                 {% endif %}
                             </td>
                             <td>{{ venta.id_usuario.username|title }}</td>
+                            <td class="text-muted small"><i class="bi bi-clock me-1"></i>{{ venta.fecha|date:"H:i" }}</td>
                             <td class="text-end fw-bold text-success">${{ venta.total|floatformat:0 }}</td>
                             <td class="text-center">
                                 <button type="button" class="btn btn-sm btn-outline-primary" 
@@ -249,7 +263,6 @@
                     <h4 class="fw-bold m-0 text-primary" id="v_tipo_folio">Boleta #000</h4>
                     <small class="text-muted" id="v_fecha">Fecha: --/--/----</small>
                 </div>
-                
                 <div class="p-3 border-bottom small">
                     <div class="d-flex justify-content-between mb-1">
                         <span class="text-muted">Cliente:</span>
@@ -260,7 +273,6 @@
                         <span class="fw-bold" id="v_vendedor">---</span>
                     </div>
                 </div>
-
                 <div class="table-responsive" style="max-height: 300px;">
                     <table class="table table-sm table-striped mb-0 small">
                         <thead class="table-light sticky-top">
@@ -270,11 +282,9 @@
                                 <th class="text-end pe-3">Subtotal</th>
                             </tr>
                         </thead>
-                        <tbody id="v_tabla_items">
-                            </tbody>
+                        <tbody id="v_tabla_items"></tbody>
                     </table>
                 </div>
-                
                 <div class="p-3 bg-primary bg-opacity-10 text-end">
                     <h5 class="m-0 fw-bold text-primary">Total: <span id="v_total">$0</span></h5>
                 </div>
@@ -290,28 +300,42 @@
 </div>
 
 <script>
+    // LÓGICA DEL BUSCADOR INSTANTÁNEO
+    document.getElementById('buscadorVentas').addEventListener('keyup', function() {
+        let texto = this.value.toLowerCase();
+        let tabla = document.getElementById('tablaVentas');
+        let filas = tabla.getElementsByTagName('tr');
+
+        // Empezamos desde 1 para saltar el encabezado
+        for (let i = 1; i < filas.length; i++) {
+            let fila = filas[i];
+            let contenido = fila.innerText.toLowerCase();
+            
+            if (contenido.includes(texto)) {
+                fila.style.display = '';
+            } else {
+                fila.style.display = 'none';
+            }
+        }
+    });
+
+    // LÓGICA DEL MODAL
     function verVoucher(idVenta) {
-        // 1. Mostrar modal vacío o cargando
         const modalEl = document.getElementById('modalVoucher');
         const modal = new bootstrap.Modal(modalEl);
-        
-        // Limpiar datos anteriores
         document.getElementById('v_tabla_items').innerHTML = '<tr><td colspan="3" class="text-center">Cargando...</td></tr>';
         modal.show();
 
-        // 2. Pedir datos al servidor (URL creada en urls.py)
         fetch(`/api/detalle_venta/${idVenta}/`)
             .then(response => response.json())
             .then(data => {
                 if(data.status === 'success'){
-                    // Llenar Encabezado
                     document.getElementById('v_tipo_folio').innerText = `${data.tipo} #${data.folio}`;
                     document.getElementById('v_fecha').innerText = data.fecha;
                     document.getElementById('v_cliente').innerText = data.cliente;
                     document.getElementById('v_vendedor').innerText = data.vendedor;
                     document.getElementById('v_total').innerText = '$' + data.total.toLocaleString('es-CL');
 
-                    // Llenar Tabla
                     let htmlItems = '';
                     data.items.forEach(item => {
                         htmlItems += `
