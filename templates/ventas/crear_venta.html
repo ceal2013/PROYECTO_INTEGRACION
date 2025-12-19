@@ -1,74 +1,125 @@
 {% extends 'base_layout.html' %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="card-title">Nueva Venta</h2>
+
+<style>
+    .card { transition: all 0.3s ease; }
+    .btn-action { transition: transform 0.1s; }
+    .btn-action:active { transform: scale(0.95); }
+    
+    /* Input más estilizado */
+    .input-group-text { background-color: #fff; border-right: none; }
+    .form-control:focus { box-shadow: none; border-color: #ced4da; }
+    
+    /* Caja del Total */
+    .total-box {
+        background: linear-gradient(135deg, #d1e7dd 0%, #ffffff 100%);
+        border-radius: 15px;
+    }
+</style>
+
+<div class="container-fluid pb-5">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-0"><i class="bi bi-cart3 me-2 text-success"></i>Terminal de Venta</h2>
+            <p class="text-muted mb-0">Nueva transacción</p>
+        </div>
+        <div class="text-end">
+             <span class="badge bg-light text-dark border px-3 py-2">
+                <i class="bi bi-person-circle me-1"></i> Atendiendo: <strong>{{ request.session.username|title }}</strong>
+             </span>
+        </div>
     </div>
 
     <div class="row">
         <div class="col-lg-8">
-            <div class="card mb-4">
-                <div class="card-header"><h5 class="mb-0">1. Detalles del Documento</h5></div>
-                <div class="card-body">
-                    <div class="row">
+            
+            <div class="card mb-4 shadow-sm border-0 border-top border-4 border-primary">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 fw-bold text-primary">
+                        <i class="bi bi-file-earmark-text me-2"></i>1. Datos del Documento
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3">
                         <div class="col-md-4">
-                            <label for="{{ venta_form.tipo_documento.id_for_label }}" class="form-label">Tipo de Documento</label>
+                            <label for="{{ venta_form.tipo_documento.id_for_label }}" class="form-label fw-bold small text-muted">TIPO DE DOCUMENTO</label>
                             {{ venta_form.tipo_documento }}
                         </div>
                         <div class="col-md-4">
-                            <label for="{{ venta_form.folio.id_for_label }}" class="form-label">N° Documento</label>
-                            {{ venta_form.folio }}
+                            <label for="{{ venta_form.folio.id_for_label }}" class="form-label fw-bold small text-muted">FOLIO (AUTO)</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light text-muted">#</span>
+                                {{ venta_form.folio }}
+                            </div>
                         </div>
                         <div class="col-md-4" id="cliente-existente-wrapper" style="display: none;">
-                            <label for="{{ venta_form.id_cliente.id_for_label }}" class="form-label">Cliente Existente</label>
+                            <label for="{{ venta_form.id_cliente.id_for_label }}" class="form-label fw-bold small text-muted">CLIENTE REGISTRADO</label>
                             {{ venta_form.id_cliente }}
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="card mb-4" id="cliente-nuevo-wrapper" style="display: none;">
-                <div class="card-header"><h5 class="mb-0">Datos del Cliente (Factura)</h5></div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="{{ cliente_form.rut.id_for_label }}" class="form-label">RUT</label>
+            <div class="card mb-4 shadow-sm border-0 border-start border-4 border-info" id="cliente-nuevo-wrapper" style="display: none;">
+                <div class="card-header bg-info bg-opacity-10 py-3">
+                    <h5 class="mb-0 fw-bold text-info-emphasis">
+                        <i class="bi bi-person-plus me-2"></i>Datos del Cliente (Factura)
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">RUT <span class="text-danger">*</span></label>
                             {{ cliente_form.rut }}
-                            <div id="rut-error" class="invalid-feedback" style="display: none;"></div>
+                            <div id="rut-error" class="invalid-feedback"></div>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="{{ cliente_form.razon_social.id_for_label }}" class="form-label">Razón Social</label>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Razón Social <span class="text-danger">*</span></label>
                             {{ cliente_form.razon_social }}
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="{{ cliente_form.giro.id_for_label }}" class="form-label">Giro</label>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Giro</label>
                             {{ cliente_form.giro }}
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="{{ cliente_form.direccion.id_for_label }}" class="form-label">Dirección</label>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Dirección</label>
                             {{ cliente_form.direccion }}
                         </div>
+                        <div class="col-12 text-end">
+                            <button type="button" id="btn-limpiar-cliente" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-eraser me-1"></i> Limpiar Campos
+                            </button>
+                        </div>
                     </div>
-                    <button type="button" id="btn-limpiar-cliente" class="btn btn-sm btn-outline-secondary">Limpiar Formulario</button>
                 </div>
             </div>
 
-            <div class="card mb-4">
-                <div class="card-header"><h5 class="mb-0">2. Productos</h5></div>
-                <div class="card-body">
-                    <div class="row align-items-end">
-                        <div class="col-md-6">
-                            <label for="producto-select" class="form-label">Buscar Producto (por nombre o código)</label>
-                            <input class="form-control" id="producto-select" list="producto-list" placeholder="Seleccione un tipo de documento..." disabled>
+            <div class="card mb-4 shadow-sm border-0 border-top border-4 border-warning">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 fw-bold text-warning">
+                        <i class="bi bi-box-seam me-2"></i>2. Agregar Productos
+                    </h5>
+                </div>
+                <div class="card-body p-4 bg-light bg-opacity-25">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-7">
+                            <label for="producto-select" class="form-label fw-bold small text-muted">BUSCAR PRODUCTO</label>
+                            <div class="input-group input-group-lg shadow-sm">
+                                <span class="input-group-text ps-3"><i class="bi bi-search text-warning"></i></span>
+                                <input class="form-control border-start-0" id="producto-select" list="producto-list" placeholder="Escriba código o nombre..." disabled>
+                            </div>
                             <datalist id="producto-list"></datalist>
                         </div>
-                        <div class="col-md-3">
-                            <label for="producto-cantidad" class="form-label">Cantidad</label>
-                            <input type="number" id="producto-cantidad" class="form-control" value="1" min="1">
+                        <div class="col-md-2">
+                            <label for="producto-cantidad" class="form-label fw-bold small text-muted">CANT.</label>
+                            <input type="number" id="producto-cantidad" class="form-control form-control-lg text-center shadow-sm" value="1" min="1">
                         </div>
                         <div class="col-md-3">
-                            <button type="button" id="btn-agregar-producto" class="btn btn-primary w-100" disabled>Agregar</button>
+                            <button type="button" id="btn-agregar-producto" class="btn btn-warning w-100 btn-lg text-white fw-bold shadow-sm btn-action" disabled>
+                                <i class="bi bi-plus-lg me-1"></i> AGREGAR
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -76,20 +127,41 @@
         </div>
 
         <div class="col-lg-4">
-            <div class="card sticky-top" style="top: 20px;">
-                <div class="card-header"><h5 class="mb-0">3. Resumen de Venta</h5></div>
-                <div class="card-body">
-                    <ul class="list-group list-group-flush" id="lista-productos-venta">
-                        <li class="list-group-item text-center text-muted" id="lista-vacia">No hay productos agregados.</li>
-                    </ul>
+            <div class="card shadow-sm border-0 border-top border-4 border-success sticky-top" style="top: 20px; z-index: 100;">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 fw-bold text-success">
+                        <i class="bi bi-receipt me-2"></i>3. Resumen
+                    </h5>
                 </div>
-                <div class="card-footer">
-                    <h5 class="d-flex justify-content-between"><span>Subtotal:</span><span id="resumen-subtotal">$0</span></h5>
-                    <h5 class="d-flex justify-content-between"><span>IVA (19%):</span><span id="resumen-iva">$0</span></h5>
-                    <hr>
-                    <h3 class="d-flex justify-content-between"><strong>Total:</strong><strong id="resumen-total">$0</strong></h3>
-                    <button type="button" id="btn-mostrar-vista-previa" class="btn btn-success btn-lg w-100 mt-3">
-                        <i class="bi bi-eye-fill me-2"></i> Revisar y Registrar Venta
+                
+                <div class="card-body p-0">
+                    <div class="table-responsive" style="max-height: 350px; overflow-y: auto;">
+                        <ul class="list-group list-group-flush" id="lista-productos-venta">
+                            <li class="list-group-item text-center text-muted py-5" id="lista-vacia">
+                                <i class="bi bi-basket3 display-4 opacity-25"></i>
+                                <p class="mt-2 mb-0">Carro vacío</p>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card-footer bg-white p-4 border-top">
+                    <div class="d-flex justify-content-between mb-1 text-muted small">
+                        <span>Subtotal:</span>
+                        <span id="resumen-subtotal">$0</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3 text-muted small">
+                        <span>IVA (19%):</span>
+                        <span id="resumen-iva">$0</span>
+                    </div>
+                    
+                    <div class="total-box p-3 text-center mb-4 border border-success border-opacity-25">
+                        <small class="text-uppercase text-success fw-bold letter-spacing-1">Total a Pagar</small>
+                        <h1 class="display-4 fw-bold text-success m-0" id="resumen-total">$0</h1>
+                    </div>
+
+                    <button type="button" id="btn-mostrar-vista-previa" class="btn btn-success btn-lg w-100 py-3 fw-bold shadow hover-lift btn-action">
+                        <i class="bi bi-check-lg me-2"></i> PROCESAR VENTA
                     </button>
                 </div>
             </div>
@@ -97,76 +169,84 @@
     </div>
 </div>
 
-<div class="modal fade" id="vistaPreviaModal" tabindex="-1" aria-labelledby="vistaPreviaModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="vistaPreviaModalLabel">Vista Previa del Documento</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+<div class="modal fade" id="vistaPreviaModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-eye me-2"></i>Confirmar Documento
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
-                <div class="row mb-3">
+            <div class="modal-body p-4">
+                
+                <div class="row mb-4 border-bottom pb-3">
                     <div class="col-6">
-                        <h4>BAZAR (Tu Negocio)</h4>
-                        <p class="mb-0">RUT: 77.777.777-7</p>
-                        <p class="mb-0">Dirección Ficticia 123, Comuna Ficticia</p>
+                        <h4 class="fw-bold text-dark">BAZAR "EL SOL"</h4>
+                        <p class="mb-0 small text-muted">RUT: 77.777.777-7</p>
+                        <p class="mb-0 small text-muted">Av. Siempreviva 123</p>
                     </div>
                     <div class="col-6 text-end">
-                        <h3 class="text-danger" id="modal-tipo-documento">BOLETA</h3>
-                        <h4 class="text-danger">N° <span id="modal-folio">0000</span></h4>
+                        <h3 class="fw-bold text-success" id="modal-tipo-documento">BOLETA</h3>
+                        <h4 class="text-muted">N° <span id="modal-folio">0000</span></h4>
                     </div>
                 </div>
 
-                <div id="modal-datos-cliente" style="display: none;">
-                    <h5>Datos del Cliente</h5>
-                    <div class="card p-3 mb-3">
-                        <p class="mb-0"><strong>RUT:</strong> <span id="modal-cliente-rut"></span></p>
-                        <p class="mb-0"><strong>Razón Social:</strong> <span id="modal-cliente-razon"></span></p>
-                        <p class="mb-0"><strong>Giro:</strong> <span id="modal-cliente-giro"></span></p>
-                        <p class="mb-0"><strong>Dirección:</strong> <span id="modal-cliente-dir"></span></p>
+                <div id="modal-datos-cliente" style="display: none;" class="mb-4">
+                    <h6 class="fw-bold text-primary border-bottom pb-1 mb-2">Datos del Cliente</h6>
+                    <div class="row g-2 small">
+                        <div class="col-6"><strong>RUT:</strong> <span id="modal-cliente-rut"></span></div>
+                        <div class="col-6"><strong>Razón:</strong> <span id="modal-cliente-razon"></span></div>
+                        <div class="col-6"><strong>Giro:</strong> <span id="modal-cliente-giro"></span></div>
+                        <div class="col-6"><strong>Dirección:</strong> <span id="modal-cliente-dir"></span></div>
                     </div>
                 </div>
 
-                <h5>Detalle</h5>
-                <table class="table table-sm">
-                    <thead>
-                        <tr>
-                            <th>Producto</th>
-                            <th class="text-center">Cant.</th>
-                            <th class="text-end">P. Unitario</th>
-                            <th class="text-end">Subtotal</th>
-                        </tr>
-                    </thead>
-                    <tbody id="modal-body-productos">
-                        </tbody>
-                </table>
+                <h6 class="fw-bold text-secondary border-bottom pb-1 mb-2">Detalle de Productos</h6>
+                <div class="table-responsive mb-4">
+                    <table class="table table-sm table-striped align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Producto</th>
+                                <th class="text-center">Cant.</th>
+                                <th class="text-end">P. Unit</th>
+                                <th class="text-end">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody id="modal-body-productos"></tbody>
+                    </table>
+                </div>
 
                 <div class="row justify-content-end">
-                    <div class="col-md-5">
-                        <ul class="list-group">
-                            <li class="list-group-item d-flex justify-content-between">
-                                <strong>Subtotal:</strong> <span id="modal-subtotal">$0</span>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between">
-                                <strong>IVA (19%):</strong> <span id="modal-iva">$0</span>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between list-group-item-success">
-                                <h4>Total:</h4>
-                                <h4><strong id="modal-total-final">$0</strong></h4>
-                            </li>
-                        </ul>
+                    <div class="col-md-6">
+                        <table class="table table-sm table-borderless text-end">
+                            <tr>
+                                <td>Subtotal:</td>
+                                <td class="fw-bold" id="modal-subtotal">$0</td>
+                            </tr>
+                            <tr>
+                                <td>IVA (19%):</td>
+                                <td class="fw-bold" id="modal-iva">$0</td>
+                            </tr>
+                            <tr class="border-top">
+                                <td class="fs-4 fw-bold text-success">Total:</td>
+                                <td class="fs-4 fw-bold text-success" id="modal-total-final">$0</td>
+                            </tr>
+                        </table>
                     </div>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" id="btn-confirmar-venta" class="btn btn-success">
-                    <i class="bi bi-check-circle me-2"></i> Confirmar y Guardar Venta
+            
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Volver</button>
+                <button type="button" id="btn-confirmar-venta" class="btn btn-success px-5 fw-bold shadow">
+                    <i class="bi bi-save me-2"></i> CONFIRMAR Y GUARDAR
                 </button>
             </div>
         </div>
     </div>
 </div>
+
 {{ productos_json|json_script:"productos-data" }}
 {{ clientes_json|json_script:"clientes-data" }}
 
@@ -180,7 +260,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- 2. ELEMENTOS DEL DOM ---
     const tipoDocumentoSelect = document.getElementById('tipo_documento');
-    const folioInput = document.getElementById('folio'); // <- CORREGIDO: Usará el {{ venta_form.folio }}
+    const folioInput = document.getElementById('folio'); 
     const clienteExistenteWrapper = document.getElementById('cliente-existente-wrapper');
     const clienteExistenteSelect = document.getElementById('id_cliente');
     const clienteNuevoWrapper = document.getElementById('cliente-nuevo-wrapper');
@@ -503,17 +583,16 @@ document.addEventListener('DOMContentLoaded', function() {
         venta.productos.forEach((p, index) => {
             subtotalGeneral += p.subtotal;
             const li = document.createElement('li');
-            li.className = 'list-group-item d-flex justify-content-between align-items-center';
+            li.className = 'list-group-item d-flex justify-content-between align-items-center py-3';
             li.innerHTML = `
                 <div>
-                    <small>${p.codigo}</small> <br>
-                    <strong>${p.nombre}</strong> <br>
-                    <small>${p.cantidad} x $${p.precio.toFixed(0)}</small>
+                    <div class="fw-bold text-dark">${p.nombre}</div>
+                    <small class="text-muted"><span class="badge bg-light text-dark border me-1">${p.codigo}</span> ${p.cantidad} un. x $${p.precio.toFixed(0)}</small>
                 </div>
-                <div>
-                    <strong>$${p.subtotal.toFixed(0)}</strong>
-                    <button type="button" class="btn btn-sm btn-outline-danger ms-2 btn-eliminar-item" data-index="${index}">
-                        <i class="bi bi-trash"></i>
+                <div class="d-flex align-items-center">
+                    <strong class="text-success me-3">$${p.subtotal.toFixed(0)}</strong>
+                    <button type="button" class="btn btn-sm btn-outline-danger btn-eliminar-item rounded-circle" data-index="${index}" title="Eliminar">
+                        <i class="bi bi-x-lg"></i>
                     </button>
                 </div>
             `;
