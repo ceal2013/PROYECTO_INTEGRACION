@@ -45,28 +45,41 @@ def user_logout(request):
 @custom_login_required
 def home(request):
     rol = request.session.get('rol')
+    
+    # 1. Obtener fecha actual
     fecha_hoy_chile = timezone.localdate()
 
+    # 2. Intentar obtener el control del día
     try:
         control_hoy = ControlDia.objects.get(fecha=fecha_hoy_chile)
     except ControlDia.DoesNotExist:
         control_hoy = None
 
+    # 3. Datos iniciales
     total_vendido = Decimal('0.00')
+    productos_criticos = []  # Lista vacía por defecto
 
+    # 4. Lógica solo para el Jefe
     if rol == 'Jefe de Ventas':
+        # A. Calcular Ventas de Hoy
         hoy_inicio = timezone.make_aware(datetime.combine(fecha_hoy_chile, time.min))
         hoy_fin = timezone.make_aware(datetime.combine(fecha_hoy_chile, time.max))
+        
         ventas_hoy = Venta.objects.filter(fecha__range=(hoy_inicio, hoy_fin))
         total_agregado = ventas_hoy.aggregate(total=Sum('total'))
         total_vendido = total_agregado.get('total') or Decimal('0.00')
 
+        # ALERTA DE STOCK: Buscar productos con 5 o menos unidades
+        # Ordenamos ascendente para ver los más críticos (0, 1, 2...) primero
+        productos_criticos = Producto.objects.filter(stock__lte=5).order_by('stock')[:5]
+
     context = {
         'control_hoy': control_hoy,
-        'total_vendido': total_vendido
+        'total_vendido': total_vendido,
+        'productos_criticos': productos_criticos # Enviamos la alerta al HTML
     }
-    return render(request, 'home.html', context)
 
+    return render(request, 'home.html', context)
 
 # --- CRUDs ---
 @custom_login_required

@@ -1,233 +1,121 @@
 {% extends 'base_layout.html' %}
 
 {% block content %}
+<div class="container-fluid">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark">Bienvenido, {{ request.session.username|title }}</h2>
+            <p class="text-muted mb-0">Panel de Control - {{ request.session.rol }}</p>
+        </div>
+        <div class="text-end">
+            <h4 class="text-primary fw-bold mb-1">{% now "d \d\e F \d\e Y" %}</h4>
+            {% if control_hoy.estado == 'Abierto' %}
+                <span class="badge bg-success fs-6 shadow-sm"><i class="bi bi-unlock-fill me-1"></i> Caja Abierta</span>
+            {% else %}
+                <span class="badge bg-danger fs-6 shadow-sm"><i class="bi bi-lock-fill me-1"></i> Caja Cerrada</span>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if productos_criticos %}
+    <div class="alert alert-danger shadow-sm border-0 border-start border-4 border-danger mb-4" role="alert">
+        <div class="d-flex align-items-center mb-2">
+            <div class="bg-danger text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+            </div>
+            <h5 class="alert-heading fw-bold m-0 text-danger">Atención: Stock Crítico Detectado</h5>
+        </div>
+        <p class="mb-2 text-muted small">Los siguientes productos tienen 5 unidades o menos. Se recomienda reponer inventario urgentemente.</p>
+        
+        <div class="table-responsive bg-white rounded shadow-sm p-0">
+            <table class="table table-sm table-hover mb-0 align-middle">
+                <thead class="table-light text-danger">
+                    <tr>
+                        <th class="ps-3">Producto</th>
+                        <th>Código</th>
+                        <th class="text-center">Stock Actual</th>
+                        <th class="text-end pe-3">Precio</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in productos_criticos %}
+                    <tr>
+                        <td class="fw-bold ps-3 text-dark">{{ p.nombre }}</td>
+                        <td class="text-muted small">{{ p.codigo }}</td>
+                        <td class="text-center">
+                            {% if p.stock == 0 %}
+                                <span class="badge bg-danger">AGOTADO (0)</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark border border-warning">{{ p.stock }} un.</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end pe-3 text-muted">${{ p.precio_unitario|floatformat:0 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+    <div class="row g-4">
+        
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm border-0 border-top border-4 border-success hover-scale">
+                <div class="card-body text-center p-4">
+                    <div class="rounded-circle bg-success bg-opacity-10 p-3 d-inline-block mb-3">
+                        <i class="bi bi-cart-plus text-success display-6"></i>
+                    </div>
+                    <h4 class="card-title fw-bold">Nueva Venta</h4>
+                    <p class="card-text text-muted">Registrar una nueva venta de productos.</p>
+                    <a href="{% url 'crear_venta' %}" class="btn btn-success w-100 fw-bold">Ir a Ventas <i class="bi bi-arrow-right ms-1"></i></a>
+                </div>
+            </div>
+        </div>
+
+        {% if request.session.rol == 'Jefe de Ventas' %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm border-0 border-top border-4 border-primary hover-scale">
+                <div class="card-body text-center p-4">
+                    <div class="rounded-circle bg-primary bg-opacity-10 p-3 d-inline-block mb-3">
+                        <i class="bi bi-bar-chart-line text-primary display-6"></i>
+                    </div>
+                    <h4 class="card-title fw-bold">Reportes</h4>
+                    <p class="card-text text-muted">Ver ganancias del día y detalle de transacciones.</p>
+                    
+                    <div class="bg-light p-2 rounded mb-3">
+                        <small class="text-muted text-uppercase fw-bold">Vendido Hoy:</small>
+                        <h3 class="text-primary m-0">${{ total_vendido|floatformat:0 }}</h3>
+                    </div>
+                    
+                    <a href="{% url 'reporte_diario' %}" class="btn btn-primary w-100 fw-bold">Ver Reportes <i class="bi bi-arrow-right ms-1"></i></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm border-0 border-top border-4 border-secondary hover-scale">
+                <div class="card-body text-center p-4">
+                    <div class="rounded-circle bg-secondary bg-opacity-10 p-3 d-inline-block mb-3">
+                        <i class="bi bi-gear text-secondary display-6"></i>
+                    </div>
+                    <h4 class="card-title fw-bold">Administración</h4>
+                    <p class="card-text text-muted">Gestionar productos, usuarios y apertura de caja.</p>
+                    
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'control_dia' %}" class="btn btn-outline-secondary btn-sm">Control de Caja</a>
+                        <a href="{% url 'listar_productos' %}" class="btn btn-outline-secondary btn-sm">Productos</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
 
 <style>
-    /* Efecto de elevación suave al pasar el mouse */
-    .hover-lift {
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .hover-lift:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
-    }
-
-    /* Fondos de iconos circulares */
-    .icon-circle {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 70px;
-        height: 70px;
-        border-radius: 50%;
-        margin-bottom: 1rem;
-    }
-    .bg-icon-success { background-color: rgba(25, 135, 84, 0.1); }
-    .bg-icon-primary { background-color: rgba(13, 110, 253, 0.1); }
-    .bg-icon-danger { background-color: rgba(220, 53, 69, 0.1); }
-    .bg-icon-warning { background-color: rgba(255, 193, 7, 0.1); }
-    .bg-icon-info { background-color: rgba(13, 202, 240, 0.1); }
-
-    /* Gradiente sutil para el cuadro de dinero */
-    .bg-gradient-success-custom {
-        background: linear-gradient(135deg, #198754 0%, #146c43 100%);
-    }
+    .hover-scale { transition: transform 0.2s; }
+    .hover-scale:hover { transform: translateY(-5px); }
 </style>
-
-<div class="container mt-4">
-
-    {% if request.session.rol == 'Jefe de Ventas' %}
-        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
-            <div>
-                <h2 class="text-dark fw-bold mb-0">Dashboard Administrativo</h2>
-                <span class="text-muted small">Vista General del Negocio</span>
-            </div>
-            <div class="text-end">
-                <h5 class="text-secondary mb-0 fw-bold">{% now "l d, F Y" %}</h5>
-                <small class="text-muted">Estado actual del sistema</small>
-            </div>
-        </div>
-
-        <div class="row mb-4">
-            <div class="col-md-6 mb-3">
-                <div class="card shadow-sm h-100 border-0">
-                    <div class="card-body text-center d-flex flex-column justify-content-center align-items-center p-4">
-                        <h6 class="text-uppercase text-muted letter-spacing-1 mb-3">Estado de la Jornada</h6>
-                        
-                        {% if control_hoy.estado == 'Abierto' %}
-                            <div class="icon-circle bg-icon-success mb-3">
-                                <i class="bi bi-unlock-fill text-success" style="font-size: 2rem;"></i>
-                            </div>
-                            <h2 class="fw-bold text-success mb-2">ABIERTO</h2>
-                            {% if control_hoy.hora_apertura %}
-                                <span class="badge bg-success bg-opacity-10 text-success border border-success mb-3 px-3 py-2">
-                                    <i class="bi bi-clock-history me-1"></i> Abierto a las: {{ control_hoy.hora_apertura|date:"H:i" }}
-                                </span>
-                            {% endif %}
-                            <form action="{% url 'control_dia' %}" method="post" class="w-100">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-outline-danger w-50 rounded-pill hover-lift btn-sm">
-                                    Cerrar Día
-                                </button>
-                            </form>
-                        {% else %}
-                            <div class="icon-circle bg-icon-danger mb-3">
-                                <i class="bi bi-lock-fill text-danger" style="font-size: 2rem;"></i>
-                            </div>
-                            <h2 class="fw-bold text-danger mb-2">CERRADO</h2>
-                            <form action="{% url 'control_dia' %}" method="post" class="w-100 mt-3">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-success w-50 rounded-pill hover-lift shadow-sm btn-sm">
-                                    Abrir Día
-                                </button>
-                            </form>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-6 mb-3">
-                <div class="card text-white bg-gradient-success-custom shadow h-100 border-0 overflow-hidden">
-                    <div class="card-body text-center d-flex flex-column justify-content-center p-5 position-relative">
-                        <i class="bi bi-currency-dollar position-absolute text-white opacity-25" style="font-size: 8rem; right: -10px; bottom: -10px;"></i>
-                        <h5 class="fw-normal opacity-75 mb-2">Recaudación Total Hoy</h5>
-                        <h1 class="display-4 fw-bold mb-3">${{ total_vendido|floatformat:0 }}</h1>
-                        <div>
-                            <a href="{% url 'reporte_diario' %}" class="btn btn-light text-success fw-bold px-4 rounded-pill shadow-sm hover-lift btn-sm">
-                                Ver Detalle <i class="bi bi-arrow-right ms-1"></i>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <h5 class="text-muted mb-3 mt-4 ps-1">Accesos Rápidos</h5>
-        <div class="row">
-            <div class="col-md-6 col-lg-3 mb-3">
-                <div class="card text-center shadow-sm h-100 border-0 border-top border-4 border-warning hover-lift">
-                    <div class="card-body p-4">
-                        <div class="icon-circle bg-icon-warning mb-3">
-                            <i class="bi bi-box-seam text-warning" style="font-size: 1.5rem;"></i>
-                        </div>
-                        <h6 class="card-title fw-bold">Productos</h6>
-                        <p class="text-muted small mb-3">Inventario y precios.</p>
-                        <a href="{% url 'listar_productos' %}" class="btn btn-outline-dark btn-sm rounded-pill px-4">Ir</a>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-md-6 col-lg-3 mb-3">
-                <div class="card text-center shadow-sm h-100 border-0 border-top border-4 border-info hover-lift">
-                    <div class="card-body p-4">
-                        <div class="icon-circle bg-icon-info mb-3">
-                            <i class="bi bi-person-vcard text-info" style="font-size: 1.5rem;"></i>
-                        </div>
-                        <h6 class="card-title fw-bold">Clientes</h6>
-                        <p class="text-muted small mb-3">Gestionar cartera.</p>
-                        <a href="{% url 'listar_clientes' %}" class="btn btn-outline-dark btn-sm rounded-pill px-4">Ir</a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-6 col-lg-3 mb-3">
-                <div class="card text-center shadow-sm h-100 border-0 border-top border-4 border-primary hover-lift">
-                    <div class="card-body p-4">
-                        <div class="icon-circle bg-icon-primary mb-3">
-                            <i class="bi bi-people-fill text-primary" style="font-size: 1.5rem;"></i>
-                        </div>
-                        <h6 class="card-title fw-bold">Usuarios</h6>
-                        <p class="text-muted small mb-3">Vendedores y roles.</p>
-                        <a href="{% url 'listar_usuarios' %}" class="btn btn-outline-dark btn-sm rounded-pill px-4">Ir</a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-6 col-lg-3 mb-3">
-                <div class="card text-center shadow-sm h-100 border-0 border-top border-4 border-success hover-lift">
-                    <div class="card-body p-4">
-                        <div class="icon-circle bg-icon-success mb-3">
-                            <i class="bi bi-cart-plus text-success" style="font-size: 1.5rem;"></i>
-                        </div>
-                        <h6 class="card-title fw-bold">Punto de Venta</h6>
-                        <p class="text-muted small mb-3">Venta manual.</p>
-                        <a href="{% url 'crear_venta' %}" class="btn btn-success btn-sm rounded-pill px-4 text-white">Vender</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-
-    {% else %}
-        
-        <div class="text-center mb-5 mt-4">
-            <h2 class="fw-bold text-dark">¡Hola, {{ request.session.username|title }}!</h2>
-            <p class="text-muted">Panel de Control Operativo</p>
-        </div>
-
-        <div class="row justify-content-center">
-            
-            <div class="col-md-5 mb-4">
-                <div class="card shadow-sm h-100 border-0 border-top border-4 {% if control_hoy.estado == 'Abierto' %}border-success{% else %}border-danger{% endif %} hover-lift">
-                    <div class="card-body text-center py-5">
-                        <h6 class="text-uppercase text-muted letter-spacing-1 mb-4">Estado de la Jornada</h6>
-                        
-                        {% if control_hoy.estado == 'Abierto' %}
-                            <div class="icon-circle bg-icon-success mb-3">
-                                <i class="bi bi-check-lg text-success" style="font-size: 2.5rem;"></i>
-                            </div>
-                            <h2 class="text-success fw-bold mb-2">ABIERTO</h2>
-                            <p class="text-muted small">La tienda está habilitada para ventas.</p>
-                            
-                            {% if control_hoy.hora_apertura %}
-                                <span class="badge bg-success bg-opacity-10 text-success border border-success mb-3 px-3 py-2">
-                                    <i class="bi bi-clock-history me-1"></i> Abierto a las: {{ control_hoy.hora_apertura|date:"H:i" }}
-                                </span>
-                            {% endif %}
-                        {% else %}
-                            <div class="icon-circle bg-icon-danger mb-3">
-                                <i class="bi bi-lock-fill text-danger" style="font-size: 2.5rem;"></i>
-                            </div>
-                            <h2 class="text-danger fw-bold mb-2">CERRADO</h2>
-                            <p class="text-muted small">Espera a que tu supervisor abra el día.</p>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-5 mb-4">
-                <div class="card shadow-sm h-100 border-0 border-top border-4 {% if control_hoy.estado == 'Abierto' %}border-primary{% else %}border-secondary{% endif %} hover-lift">
-                    <div class="card-body text-center py-5 d-flex flex-column justify-content-center align-items-center">
-                        <h6 class="text-uppercase text-muted letter-spacing-1 mb-4">Acción Rápida</h6>
-                        
-                        <div class="icon-circle {% if control_hoy.estado == 'Abierto' %}bg-icon-primary{% else %}bg-light{% endif %} mb-3">
-                            <i class="bi bi-cart3 {% if control_hoy.estado == 'Abierto' %}text-primary{% else %}text-muted{% endif %}" style="font-size: 2.5rem;"></i>
-                        </div>
-                        
-                        <h2 class="fw-bold mb-2 {% if control_hoy.estado == 'Abierto' %}text-dark{% else %}text-muted{% endif %}">Nueva Venta</h2>
-                        <p class="text-muted small mb-4">Ingresar al módulo de facturación.</p>
-                        
-                        {% if control_hoy.estado == 'Abierto' %}
-                            <a href="{% url 'crear_venta' %}" class="btn btn-primary rounded-pill px-5 py-2 fw-bold shadow-sm">
-                                Iniciar Venta
-                            </a>
-                        {% else %}
-                            <button class="btn btn-secondary rounded-pill px-5 py-2" disabled>
-                                No Disponible
-                            </button>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-
-        </div>
-        
-        <div class="text-center mt-5">
-            <small class="text-muted">
-                <i class="bi bi-shield-lock me-1"></i> Conectado como <strong>{{ request.session.rol }}</strong>
-            </small>
-        </div>
-
-    {% endif %}
-</div>
 {% endblock %}
