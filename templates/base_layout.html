@@ -19,6 +19,7 @@
         .navbar { 
             background-color: #198754; 
         } 
+        /* Enlaces del navbar blancos */
         .navbar-brand, .nav-link, .navbar-text { 
             color: #fff !important; 
         }
@@ -68,41 +69,42 @@
             .main-container {
                 padding: 1rem; 
             }
+            /* Ajuste para que el reloj no sea gigante en movil */
+            #reloj-actual {
+                font-size: 1.1rem !important;
+            }
         }
     </style>
 </head>
 <body>
 
-    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="{% url 'home' %}">
+    <nav class="navbar navbar-dark sticky-top p-2">
+        <div class="container-fluid d-flex flex-column flex-md-row align-items-center justify-content-between">
+            
+            <a class="navbar-brand mb-2 mb-md-0" href="{% url 'home' %}">
                 <i class="bi bi-shop me-2"></i>Bazar "El Sol"
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarText">
-                <span class="navbar-toggler-icon"></span>
-            </button>
             
-            <div class="collapse navbar-collapse" id="navbarText">
-                
-                <div class="text-white text-center mx-auto mb-3 mb-lg-0">
-                    <div style="font-size: 0.9rem; text-transform: capitalize;">
-                        <i class="bi bi-calendar3 me-1"></i> <span id="fecha-actual">Cargando...</span>
-                    </div>
-                    <div style="font-size: 1.2rem; font-weight: bold; line-height: 1;">
-                        <span id="reloj-actual">--:--:--</span>
-                    </div>
+            <div class="text-white text-center mb-2 mb-md-0 mx-auto">
+                <div style="font-size: 0.85rem; text-transform: capitalize; opacity: 0.9;">
+                    <i class="bi bi-calendar3 me-1"></i> <span id="fecha-actual">Cargando...</span>
                 </div>
-
-                {% if request.session.usuario_id %}
-                    <div class="ms-auto d-flex align-items-center">
-                        <span class="navbar-text me-3">
-                            <i class="bi bi-person-circle"></i> 
-                            Usuario: <strong>{{ request.session.username }}</strong> ({{ request.session.rol }})
-                        </span>
-                        <a href="{% url 'logout' %}" class="btn btn-outline-light btn-sm">Cerrar sesión</a>
-                    </div>
-                {% endif %}
+                <div style="font-size: 1.3rem; font-weight: bold; line-height: 1.1;">
+                    <span id="reloj-actual">--:--:--</span>
+                </div>
             </div>
+
+            {% if request.session.usuario_id %}
+                <div class="d-flex align-items-center flex-column flex-sm-row gap-2">
+                    <span class="navbar-text text-center text-sm-start" style="font-size: 0.9rem;">
+                        <i class="bi bi-person-circle"></i> 
+                        {{ request.session.username }} <span class="badge bg-light text-success rounded-pill">{{ request.session.rol }}</span>
+                    </span>
+                    <a href="{% url 'logout' %}" class="btn btn-outline-light btn-sm px-3">
+                        <i class="bi bi-box-arrow-right"></i> Salir
+                    </a>
+                </div>
+            {% endif %}
         </div>
     </nav>
     
@@ -225,26 +227,17 @@
     <script>
         function actualizarReloj() {
             const ahora = new Date();
-            
-            // Opciones para la fecha (ej: Viernes 19 de Diciembre)
             const opcionesFecha = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
             const fechaString = ahora.toLocaleDateString('es-ES', opcionesFecha);
-            
-            // Opciones para la hora (ej: 14:30:05)
             const horaString = ahora.toLocaleTimeString('es-ES');
 
-            // Actualizar el HTML si existen los elementos
             const elFecha = document.getElementById('fecha-actual');
             const elReloj = document.getElementById('reloj-actual');
             
             if(elFecha) elFecha.innerText = fechaString;
             if(elReloj) elReloj.innerText = horaString;
         }
-
-        // Ejecutar cada 1 segundo (1000 ms)
         setInterval(actualizarReloj, 1000);
-        
-        // Ejecutar inmediatamente al cargar para no esperar 1 segundo
         actualizarReloj();
     </script>
 </body>
