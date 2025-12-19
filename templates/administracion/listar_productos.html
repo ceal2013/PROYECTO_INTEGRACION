@@ -1,51 +1,115 @@
 {% extends 'base_layout.html' %}
+
 {% block content %}
+<div class="container-fluid">
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="card-title">Gestión de Productos</h2>
-    <a href="{% url 'crear_producto' %}" class="btn btn-success">
-        <i class="bi bi-plus-circle me-2"></i> Crear Nuevo Producto
-    </a>
-</div>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-0">
+                <i class="bi bi-box-seam me-2 text-warning"></i>Gestión de Productos
+            </h2>
+            <p class="text-muted mb-0">Administra el inventario y precios.</p>
+        </div>
+    </div>
 
-<div class="card">
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-striped table-hover">
-                <thead>
-                    <tr>
-                        <th>Código</th>
-                        <th>Nombre</th>
-                        <th>Precio Unitario</th>
-                        <th>Stock</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for producto in productos %}
-                    <tr>
-                        <td>{{ producto.codigo }}</td>
-                        <td>{{ producto.nombre }}</td>
-                        <td>${{ producto.precio_unitario|floatformat:0 }}</td>
-                        <td>{{ producto.stock }}</td>
-                        <td>
-                            <a href="{% url 'editar_producto' producto.codigo %}" class="btn btn-primary btn-sm">
-                                <i class="bi bi-pencil-fill"></i> Editar
-                            </a>
-                            <a href="{% url 'eliminar_producto' producto.codigo %}" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de que deseas eliminar este producto?');">
-                                <i class="bi bi-trash-fill"></i> Eliminar
-                            </a>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="5" class="text-center">No hay productos registrados.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <div class="card shadow-sm border-0">
+        
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 fw-bold text-secondary">Listado de Inventario</h5>
+            <a href="{% url 'crear_producto' %}" class="btn btn-success rounded-pill px-3 shadow-sm hover-lift">
+                <i class="bi bi-plus-lg me-1"></i> Nuevo Producto
+            </a>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light text-secondary small text-uppercase">
+                        <tr>
+                            <th class="ps-4 py-3">Código</th>
+                            <th>Nombre</th>
+                            <th class="text-end">Precio Unitario</th>
+                            <th class="text-center">Stock</th>
+                            <th class="text-end pe-4">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for producto in productos %}
+                        <tr>
+                            <td class="ps-4 fw-bold text-primary">#{{ producto.codigo }}</td>
+                            
+                            <td>
+                                <span class="fw-semibold">{{ producto.nombre }}</span>
+                            </td>
+                            
+                            <td class="text-end fw-bold text-dark">
+                                ${{ producto.precio_unitario|floatformat:0 }}
+                            </td>
+                            
+                            <td class="text-center">
+                                {% if producto.stock == 0 %}
+                                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger rounded-pill px-3">
+                                        Agotado (0)
+                                    </span>
+                                {% elif producto.stock <= 5 %}
+                                    <span class="badge bg-warning bg-opacity-10 text-warning border border-warning rounded-pill px-3">
+                                        Crítico ({{ producto.stock }})
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-success bg-opacity-10 text-success border border-success rounded-pill px-3">
+                                        {{ producto.stock }} un.
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <td class="text-end pe-4">
+                                <div class="btn-group btn-group-sm shadow-sm">
+                                    <a href="{% url 'editar_producto' producto.codigo %}" 
+                                       class="btn btn-outline-primary" 
+                                       data-bs-toggle="tooltip" 
+                                       data-bs-placement="top" 
+                                       title="Editar Producto">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+                                    
+                                    <a href="{% url 'eliminar_producto' producto.codigo %}" 
+                                       class="btn btn-outline-danger" 
+                                       data-bs-toggle="tooltip" 
+                                       data-bs-placement="top" 
+                                       title="Eliminar Producto"
+                                       onclick="return confirm('¿Estás seguro de que deseas eliminar este producto?');">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                <i class="bi bi-inbox display-4 opacity-25 mb-3 d-block"></i>
+                                No hay productos registrados.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+          return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
+    });
+</script>
+
+<style>
+    /* Efecto de elevación suave para el botón crear */
+    .hover-lift:hover { transform: translateY(-2px); transition: transform 0.2s; }
+</style>
 
 {% endblock %}

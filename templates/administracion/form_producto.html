@@ -1,45 +1,77 @@
 {% extends 'base_layout.html' %}
 
 {% block content %}
-<div class="container">
+<div class="container mt-5">
     <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">{{ accion }} Producto</h3>
+        <div class="col-md-8 col-lg-6">
+            
+            <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+                
+                <div class="card-header bg-success text-white py-4 position-relative text-center">
+                    <a href="{% url 'listar_productos' %}" class="btn btn-sm btn-success bg-opacity-25 border-0 position-absolute start-0 top-50 translate-middle-y ms-3 text-white hover-scale" title="Volver">
+                        <i class="bi bi-arrow-left fs-5"></i>
+                    </a>
+                    
+                    <h4 class="mb-0 fw-bold text-uppercase letter-spacing-1">
+                        {% if accion == 'Crear' %}
+                            <i class="bi bi-plus-circle me-2"></i>Nuevo Producto
+                        {% else %}
+                            <i class="bi bi-pencil-square me-2"></i>Editar Producto
+                        {% endif %}
+                    </h4>
                 </div>
-                <div class="card-body">
-                    <form method="post">
+
+                <div class="card-body p-5 bg-light bg-opacity-10">
+                    <form method="post" novalidate>
                         {% csrf_token %}
                         
-                        <div class="mb-3">
-                            <label class="form-label">Código</label>
-                            {{ form.codigo }}
-                            {{ form.codigo.errors }}
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Código del Producto</label>
+                            <div class="input-group shadow-sm">
+                                <span class="input-group-text bg-white border-end-0 text-success"><i class="bi bi-upc-scan"></i></span>
+                                {{ form.codigo }}
+                            </div>
+                            <div class="text-danger small mt-1 ps-1 fw-bold">{{ form.codigo.errors }}</div>
                         </div>
                         
-                        <div class="mb-3">
-                            <label class="form-label">Nombre</label>
-                            {{ form.nombre }}
-                            {{ form.nombre.errors }}
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Nombre / Descripción</label>
+                            <div class="input-group shadow-sm">
+                                <span class="input-group-text bg-white border-end-0 text-success"><i class="bi bi-tag-fill"></i></span>
+                                {{ form.nombre }}
+                            </div>
+                            <div class="text-danger small mt-1 ps-1 fw-bold">{{ form.nombre.errors }}</div>
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label">Precio Unitario</label>
-                            {{ form.precio_unitario }}
-                            {{ form.precio_unitario.errors }}
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <label class="form-label fw-bold text-muted small text-uppercase">Precio Unitario</label>
+                                <div class="input-group shadow-sm">
+                                    <span class="input-group-text bg-white border-end-0 text-success"><i class="bi bi-currency-dollar"></i></span>
+                                    {{ form.precio_unitario }}
+                                </div>
+                                <div class="text-danger small mt-1 ps-1 fw-bold">{{ form.precio_unitario.errors }}</div>
+                            </div>
+
+                            <div class="col-md-6 mb-4">
+                                <label class="form-label fw-bold text-muted small text-uppercase">Stock Inicial</label>
+                                <div class="input-group shadow-sm">
+                                    <span class="input-group-text bg-white border-end-0 text-success"><i class="bi bi-layers-fill"></i></span>
+                                    {{ form.stock }}
+                                </div>
+                                <div class="text-danger small mt-1 ps-1 fw-bold">{{ form.stock.errors }}</div>
+                            </div>
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label">Stock</label>
-                            {{ form.stock }}
-                            {{ form.stock.errors }}
-                        </div>
+                        <hr class="my-4 border-secondary opacity-10">
 
-                        <hr>
-                        <div class="d-flex justify-content-end">
-                            <a href="{% url 'listar_productos' %}" class="btn btn-secondary me-2">Cancelar</a>
-                            <button type="submit" class="btn btn-success">{{ accion }}</button>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{% url 'listar_productos' %}" class="btn btn-light text-muted fw-bold rounded-pill px-4 hover-lift">
+                                Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-success fw-bold px-5 rounded-pill shadow-sm hover-lift">
+                                <i class="bi bi-check-lg me-2"></i>Guardar
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -47,4 +79,30 @@
         </div>
     </div>
 </div>
+
+<style>
+    .hover-scale:hover { transform: scale(1.1); transition: transform 0.2s; }
+    .hover-lift:hover { transform: translateY(-2px); transition: transform 0.2s; }
+    
+    /* Asegurar que los inputs se vean bien integrados con el ícono */
+    .input-group-text { border-right: none; }
+    .input-group .form-control { border-left: none; }
+    .input-group .form-control:focus { box-shadow: none; border-color: #ced4da; }
+    .input-group:focus-within { box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25) !important; border-radius: 0.375rem; }
+    .input-group:focus-within .input-group-text, 
+    .input-group:focus-within .form-control { border-color: #198754; }
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Selecciona todos los inputs y selects dentro del formulario
+        var inputs = document.querySelectorAll('form input, form select');
+        inputs.forEach(function(input) {
+            // Agrega la clase form-control si no es un checkbox/radio
+            if (input.type !== 'checkbox' && input.type !== 'radio') {
+                input.classList.add('form-control');
+            }
+        });
+    });
+</script>
 {% endblock %}
