@@ -1,85 +1,152 @@
 {% extends 'base_layout.html' %}
 
 {% block content %}
+<div class="container mt-4">
 
-{% if request.session.rol == 'Jefe de Ventas' %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="card-title">Dashboard (Jefe de Ventas)</h2>
-    <h4 class="text-muted">Hoy: {% now "d/m/Y" %}</h4>
-</div>
-<div class="row">
-    <div class="col-md-6">
-        <div class="card {% if control_hoy.estado == 'Abierto' %}border-success{% else %}border-danger{% endif %} mb-3">
-            <div class="card-header">
-                <h5>Estado del Día</h5>
-            </div>
-            <div class="card-body text-center">
-                {% if control_hoy.estado == 'Abierto' %}
-                    <h1 class="display-4 text-success">ABIERTO</h1>
-                    <a href="{% url 'control_dia' %}" class="btn btn-danger">Cerrar Día</a>
-                {% else %}
-                    <h1 class="display-4 text-danger">CERRADO</h1>
-                    <a href="{% url 'control_dia' %}" class="btn btn-success">Abrir Día</a>
-                {% endif %}
-            </div>
+    {% if request.session.rol == 'Jefe de Ventas' %}
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="text-success">Dashboard (Jefe de Ventas)</h2>
+            <h5 class="text-muted">Hoy: {% now "d/m/Y" %}</h5>
         </div>
-    </div>
-    <div class="col-md-6">
-        <div class="card text-white bg-success mb-3">
-            <div class="card-header">
-                <h5>Total Recaudado Hoy</h5>
-            </div>
-            <div class="card-body text-center">
-                <h1 class="display-4 text-white">${{ total_recaudado_hoy|floatformat:0 }}</h1>
-                <a href="{% url 'reporte_diario' %}" class="btn btn-outline-light">Ver Reporte Completo</a>
-            </div>
-        </div>
-    </div>
-</div>
 
-<div class="row mt-4">
-    <div class="col-md-4">
-        <div class="card text-center">
-            <div class="card-body">
-                <i class="bi bi-box-seam" style="font-size: 3rem; color: #198754;"></i>
-                <h5 class="card-title mt-3">Gestión de Productos</h5>
-                <p class="card-text">Añadir, editar y eliminar productos del inventario.</p>
-                <a href="{% url 'listar_productos' %}" class="btn btn-primary">Ir a Productos</a>
+        <div class="row mb-4">
+            <div class="col-md-6 mb-3">
+                <div class="card shadow-sm h-100 border-start border-4 {% if control_hoy.estado == 'Abierto' %}border-success{% else %}border-danger{% endif %}">
+                    <div class="card-header bg-white fw-bold">Estado del Día</div>
+                    <div class="card-body text-center d-flex flex-column justify-content-center align-items-center">
+                        {% if control_hoy.estado == 'Abierto' %}
+                            <h1 class="display-4 text-success mb-3">ABIERTO</h1>
+                            {% if control_hoy.hora_apertura %}
+                                <span class="badge bg-light text-dark mb-3">
+                                    <i class="bi bi-clock"></i> Abierto a las: {{ control_hoy.hora_apertura|date:"H:i" }}
+                                </span>
+                            {% endif %}
+                            <form action="{% url 'control_dia' %}" method="post">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger">Cerrar Día</button>
+                            </form>
+                        {% else %}
+                            <h1 class="display-4 text-danger mb-3">CERRADO</h1>
+                            <form action="{% url 'control_dia' %}" method="post">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success">Abrir Día</button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card text-center">
-            <div class="card-body">
-                <i class="bi bi-people-fill" style="font-size: 3rem; color: #198754;"></i>
-                <h5 class="card-title mt-3">Gestión de Usuarios</h5>
-                <p class="card-text">Crear y administrar cuentas de vendedores.</p>
-                <a href="{% url 'listar_usuarios' %}" class="btn btn-primary">Ir a Usuarios</a>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card text-center">
-            <div class="card-body">
-                <i class="bi bi-cart-plus" style="font-size: 3rem; color: #198754;"></i>
-                <h5 class="card-title mt-3">Punto de Venta</h5>
-                <p class="card-text">Acceder al módulo para registrar una nueva venta.</p>
-                <a href="{% url 'crear_venta' %}" class="btn btn-primary">Ir a Ventas</a>
-            </div>
-        </div>
-    </div>
-</div>
 
-{% else %}
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card text-center p-4">
-            <h3 class="card-title">Bienvenido, {{ request.session.username }}</h3>
-            <p class="lead">Si el día está abierto, serás redirigido al módulo de ventas automáticamente.</p>
-            <p class="mt-3">Si el día está cerrado, por favor contacta al Jefe de Ventas para iniciar la jornada.</p>
+            <div class="col-md-6 mb-3">
+                <div class="card text-white bg-success shadow-sm h-100">
+                    <div class="card-header border-0 fw-bold">Total Recaudado Hoy</div>
+                    <div class="card-body text-center d-flex flex-column justify-content-center">
+                        <h1 class="display-3 fw-bold">${{ total_vendido|floatformat:0 }}</h1>
+                        <a href="{% url 'reporte_diario' %}" class="btn btn-outline-light mt-3">Ver Reporte Completo</a>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
-</div>
-{% endif %}
 
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <div class="card text-center shadow-sm h-100 py-4">
+                    <div class="card-body">
+                        <i class="bi bi-box-seam text-success display-4 mb-3"></i>
+                        <h5 class="card-title text-success">Gestión de Productos</h5>
+                        <p class="card-text text-muted small">Añadir, editar y eliminar productos del inventario.</p>
+                        <a href="{% url 'listar_productos' %}" class="btn btn-primary w-100">Ir a Productos</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card text-center shadow-sm h-100 py-4">
+                    <div class="card-body">
+                        <i class="bi bi-people-fill text-success display-4 mb-3"></i>
+                        <h5 class="card-title text-success">Gestión de Usuarios</h5>
+                        <p class="card-text text-muted small">Crear y administrar cuentas de vendedores.</p>
+                        <a href="{% url 'listar_usuarios' %}" class="btn btn-primary w-100">Ir a Usuarios</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card text-center shadow-sm h-100 py-4 border-success">
+                    <div class="card-body">
+                        <i class="bi bi-cart-plus text-success display-4 mb-3"></i>
+                        <h5 class="card-title text-success">Punto de Venta</h5>
+                        <p class="card-text text-muted small">Acceder al módulo para registrar una nueva venta.</p>
+                        <a href="{% url 'crear_venta' %}" class="btn btn-primary w-100">Ir a Ventas</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    {% else %}
+        
+        <div class="text-center mb-5 mt-3">
+            <h2 class="display-6 text-secondary">Bienvenido, <strong>{{ request.session.username|title }}</strong></h2>
+            <p class="text-muted">Panel de Control de Ventas</p>
+        </div>
+
+        <div class="row justify-content-center">
+            
+            <div class="col-md-5 mb-4">
+                <div class="card shadow h-100 border-0">
+                    <div class="card-body text-center py-5">
+                        <h5 class="card-title text-muted mb-4">ESTADO DEL SISTEMA</h5>
+                        
+                        {% if control_hoy.estado == 'Abierto' %}
+                            <div class="mb-3">
+                                <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+                            </div>
+                            <h2 class="text-success fw-bold">DÍA ABIERTO</h2>
+                            <p class="text-muted mt-2">
+                                Puedes realizar ventas normalmente.
+                            </p>
+                            {% if control_hoy.hora_apertura %}
+                                <small class="text-success fw-bold bg-light px-3 py-1 rounded-pill">
+                                    <i class="bi bi-clock"></i> Inicio: {{ control_hoy.hora_apertura|date:"H:i" }} hrs
+                                </small>
+                            {% endif %}
+                        {% else %}
+                            <div class="mb-3">
+                                <i class="bi bi-lock-fill text-danger" style="font-size: 4rem;"></i>
+                            </div>
+                            <h2 class="text-danger fw-bold">DÍA CERRADO</h2>
+                            <p class="text-muted mt-2">
+                                Espera a que el Jefe de Ventas abra la jornada.
+                            </p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-5 mb-4">
+                <div class="card shadow h-100 border-0 {% if control_hoy.estado == 'Abierto' %}border-top border-success border-5{% endif %}">
+                    <div class="card-body text-center py-5 d-flex flex-column justify-content-center">
+                        <h5 class="card-title text-muted mb-4">ACCIÓN RÁPIDA</h5>
+                        
+                        <div class="mb-3">
+                            <i class="bi bi-cart3 text-primary" style="font-size: 4rem;"></i>
+                        </div>
+                        <h3 class="fw-bold mb-3">Nueva Venta</h3>
+                        <p class="text-muted mb-4">Ingresar al módulo de facturación y cobro.</p>
+                        
+                        {% if control_hoy.estado == 'Abierto' %}
+                            <a href="{% url 'crear_venta' %}" class="btn btn-primary btn-lg rounded-pill px-5 shadow-sm">
+                                <i class="bi bi-play-fill me-1"></i> Ir a Vender
+                            </a>
+                        {% else %}
+                            <button class="btn btn-secondary btn-lg rounded-pill px-5" disabled>
+                                Sistema Bloqueado
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    {% endif %}
+</div>
 {% endblock %}

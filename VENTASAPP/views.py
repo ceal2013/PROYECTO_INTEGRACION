@@ -45,41 +45,40 @@ def user_logout(request):
 @custom_login_required
 def home(request):
     rol = request.session.get('rol')
-    context = {}
-
-    # CORRECCION: Usar localdate() para respetar hora Chilena
+    
+    # 1. Obtener fecha actual (Chile)
     fecha_hoy_chile = timezone.localdate()
 
-    # 1. Intentar obtener el control del día
+    # 2. Intentar obtener el control del día (Para saber si está Abierto/Cerrado)
     try:
         control_hoy = ControlDia.objects.get(fecha=fecha_hoy_chile)
     except ControlDia.DoesNotExist:
         control_hoy = None
 
-    # 2. Lógica para VENDEDOR
-    if rol == 'Vendedor':
-        if control_hoy and control_hoy.estado == 'Abierto':
-            return redirect('crear_venta')
-        else:
-            messages.warning(request, 'El día está CERRADO. No se pueden registrar nuevas ventas.')
-            context['dia_cerrado'] = True
+    # 3. Calcular ventas del día (Solo nos interesa mostrar el monto si es Jefe, 
+    # pero calculamos 0 por defecto para que no falle el template)
+    total_vendido = Decimal('0.00')
 
-    # 3. Lógica para JEFE DE VENTAS
     if rol == 'Jefe de Ventas':
-        context['control_hoy'] = control_hoy
-        
-        # Calcular total recaudado hoy (Usando fechas conscientes de zona horaria)
-        # Obtenemos el inicio y fin del día en la zona horaria actual
+        # Calcular total real solo si es Jefe
         hoy_inicio = timezone.make_aware(datetime.combine(fecha_hoy_chile, time.min))
         hoy_fin = timezone.make_aware(datetime.combine(fecha_hoy_chile, time.max))
         
         ventas_hoy = Venta.objects.filter(fecha__range=(hoy_inicio, hoy_fin))
-        total_hoy = ventas_hoy.aggregate(total_recaudado=Sum('total'))
-        context['total_recaudado_hoy'] = total_hoy.get('total_recaudado') or Decimal('0.00')
+        total_agregado = ventas_hoy.aggregate(total=Sum('total'))
+        total_vendido = total_agregado.get('total') or Decimal('0.00')
 
-    # 4. Renderizar el dashboard
+    # --- CAMBIO IMPORTANTE ---
+    # Ya NO hay "if rol == 'Vendedor': return redirect...".
+    # Ahora dejamos que pase directo al render.
+
+    context = {
+        'control_hoy': control_hoy,
+        'total_vendido': total_vendido
+    }
+
+    # 4. Renderizar el dashboard (El HTML se encarga de mostrar la versión Vendedor o Jefe)
     return render(request, 'home.html', context)
-
 
 # --- CRUD de Productos (Solo Jefe de Ventas) ---
 @custom_login_required
