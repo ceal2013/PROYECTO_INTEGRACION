@@ -26,8 +26,8 @@
         /* --- LAYOUT PRINCIPAL (Desktop) --- */
         .layout { 
             display: flex; 
-            min-height: 100vh; /* Ocupa toda la altura de la pantalla */
-            flex-direction: row; /* Sidebar a la izq, Contenido a la der */
+            min-height: 100vh; 
+            flex-direction: row; 
         }
         
         .sidebar { 
@@ -35,13 +35,13 @@
             background-color: #ffffff; 
             border-right: 1px solid #ddd; 
             padding: 1rem; 
-            flex-shrink: 0; /* Evita que se encoja */
+            flex-shrink: 0; 
         }
         
         .main-container { 
             display: flex; 
-            flex-direction: column; /* Apila contenido y footer verticalmente */
-            flex-grow: 1; /* Ocupa todo el ancho restante */
+            flex-direction: column; 
+            flex-grow: 1; 
             padding: 2rem; 
             background-color: #f8f9fa; 
             width: 100%; 
@@ -57,7 +57,7 @@
         /* --- MODO MÓVIL (Pantallas < 768px) --- */
         @media (max-width: 768px) {
             .layout {
-                flex-direction: column; /* Cambia a vertical: Menú arriba, contenido abajo */
+                flex-direction: column; 
             }
             .sidebar {
                 width: 100%; 
@@ -83,6 +83,16 @@
             </button>
             
             <div class="collapse navbar-collapse" id="navbarText">
+                
+                <div class="d-none d-lg-block mx-auto text-white text-center">
+                    <div style="font-size: 0.9rem; text-transform: capitalize;">
+                        <i class="bi bi-calendar3 me-1"></i> <span id="fecha-actual">Cargando...</span>
+                    </div>
+                    <div style="font-size: 1.2rem; font-weight: bold; line-height: 1;">
+                        <span id="reloj-actual">--:--:--</span>
+                    </div>
+                </div>
+
                 {% if request.session.usuario_id %}
                     <div class="ms-auto d-flex align-items-center">
                         <span class="navbar-text me-3">
@@ -209,5 +219,33 @@
                 </div>
             </footer>
 
-        </div> </div> </body>
+        </div> 
+    </div>
+
+    <script>
+        function actualizarReloj() {
+            const ahora = new Date();
+            
+            // Opciones para la fecha (ej: Viernes 19 de Diciembre)
+            const opcionesFecha = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+            const fechaString = ahora.toLocaleDateString('es-ES', opcionesFecha);
+            
+            // Opciones para la hora (ej: 14:30:05)
+            const horaString = ahora.toLocaleTimeString('es-ES');
+
+            // Actualizar el HTML si existen los elementos
+            const elFecha = document.getElementById('fecha-actual');
+            const elReloj = document.getElementById('reloj-actual');
+            
+            if(elFecha) elFecha.innerText = fechaString;
+            if(elReloj) elReloj.innerText = horaString;
+        }
+
+        // Ejecutar cada 1 segundo (1000 ms)
+        setInterval(actualizarReloj, 1000);
+        
+        // Ejecutar inmediatamente al cargar para no esperar 1 segundo
+        actualizarReloj();
+    </script>
+</body>
 </html>
