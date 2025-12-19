@@ -2,6 +2,48 @@
 {% block content %}
 
 <style>
+    /* --- ESTILOS DE IMPRESIÓN (Solo se activan al imprimir) --- */
+    @media print {
+        /* 1. Ocultar TODO lo que no sea el ticket */
+        body * {
+            visibility: hidden;
+        }
+        
+        /* 2. Ocultar elementos decorativos del navegador */
+        @page {
+            margin: 0;
+            size: auto;
+        }
+
+        /* 3. Hacer visible SOLO el contenido del modal */
+        #modalVoucher, #modalVoucher * {
+            visibility: visible;
+        }
+
+        /* 4. Posicionar el ticket al inicio de la hoja */
+        #modalVoucher {
+            position: absolute;
+            left: 0;
+            top: 0;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            background-color: white !important;
+            border: none !important;
+        }
+        
+        /* 5. Ocultar botones del modal (Cerrar/Imprimir) en el papel */
+        .modal-footer, .btn-close {
+            display: none !important;
+        }
+
+        /* 6. Ajuste para que parezca ticket real (Opcional: ancho fijo si usas térmica) */
+        .modal-content {
+            box-shadow: none !important;
+            border: none !important;
+            width: 100% !important; /* O cambiar a 80mm si es térmica */
+        }
+    }
     /* Estilos Premium */
     .hover-lift {
         transition: transform 0.2s ease, box-shadow 0.2s ease;
