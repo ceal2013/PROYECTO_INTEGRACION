@@ -368,6 +368,10 @@ def crear_venta(request):
             iva = (subtotal_venta * Decimal('0.19')).quantize(Decimal('0.00'))
             total = subtotal_venta + iva
 
+            # 1. CAPTURAR EL MÉTODO DE PAGO (Si no viene, por defecto es Efectivo)
+            metodo_pago_seleccionado = data.get('metodo_pago', 'Efectivo')
+
+            # 2. CREAR LA VENTA CON EL MÉTODO DE PAGO
             venta = Venta.objects.create(
                 tipo_documento=tipo_documento,
                 folio=folio_num,
@@ -376,7 +380,8 @@ def crear_venta(request):
                 total=total.quantize(Decimal('0.00')),
                 id_usuario_id=request.session.get('usuario_id'),
                 id_cliente=cliente_obj,
-                id_control=control_hoy
+                id_control=control_hoy,
+                metodo_pago=metodo_pago_seleccionado  # <--- ¡AQUÍ ESTÁ LA MAGIA!
             )
 
             for detalle in detalles_venta:
