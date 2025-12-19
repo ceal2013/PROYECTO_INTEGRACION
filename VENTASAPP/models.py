@@ -78,6 +78,9 @@ class ControlDia(models.Model):
     fecha = models.DateField(unique=True)
     estado = models.CharField(max_length=10, choices=ESTADO_CHOICES, default=ESTADO_CERRADO)
     id_usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    
+    # NUEVO CAMPO: Hora de apertura (permite nulos para días antiguos)
+    hora_apertura = models.TimeField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.fecha} - {self.estado}"
