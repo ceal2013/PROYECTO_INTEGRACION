@@ -304,22 +304,43 @@ def crear_venta(request):
                 folio_num = (max_folio_q['max_folio'] or 0) + 1
             
             cliente_id = data.get('cliente_id')
-            cliente_nuevo = data.get('cliente_nuevo')
+            cliente_datos = data.get('cliente_datos') # Ahora recibimos esto siempre en Factura
             productos_data = data.get('productos')
 
             # Validar Cliente
             cliente_obj = None
+            
             if tipo_documento == 'Factura':
                 if cliente_id:
+                    # CASO 1: CLIENTE EXISTENTE (Posible Actualización)
                     cliente_obj = Cliente.objects.get(id=cliente_id)
-                elif cliente_nuevo:
-                    cliente_form = ClienteForm(cliente_nuevo)
+                    
+                    # Si vienen datos, actualizamos (excepto el RUT que asumimos es la llave)
+                    if cliente_datos:
+                        cambios = False
+                        if cliente_obj.razon_social != cliente_datos.get('razon_social'):
+                            cliente_obj.razon_social = cliente_datos.get('razon_social')
+                            cambios = True
+                        if cliente_obj.giro != cliente_datos.get('giro'):
+                            cliente_obj.giro = cliente_datos.get('giro')
+                            cambios = True
+                        if cliente_obj.direccion != cliente_datos.get('direccion'):
+                            cliente_obj.direccion = cliente_datos.get('direccion')
+                            cambios = True
+                        
+                        if cambios:
+                            cliente_obj.save() # Guardamos los cambios en la DB
+                            
+                elif cliente_datos:
+                    # CASO 2: CLIENTE TOTALMENTE NUEVO
+                    # Usamos el form para validar
+                    cliente_form = ClienteForm(cliente_datos)
                     if cliente_form.is_valid():
                         cliente_obj = cliente_form.save()
                     else:
                         return JsonResponse({'status': 'error', 'message': 'Datos del cliente inválidos.'}, status=400)
                 else:
-                    return JsonResponse({'status': 'error', 'message': 'Para Factura, debe seleccionar un cliente.'}, status=400)
+                    return JsonResponse({'status': 'error', 'message': 'Para Factura, faltan los datos del cliente.'}, status=400)
 
             # Calcular totales
             subtotal_venta = Decimal('0.00')
