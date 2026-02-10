@@ -4,6 +4,10 @@ Django settings for Bazar "El Sol" project.
 
 from pathlib import Path
 import os
+#from dotenv import load_dotenv
+
+# Cargar variables del .env (aunque ahora usaremos credenciales directas para AWS)
+#load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -11,17 +15,15 @@ TEMPLATES_DIR = BASE_DIR / 'templates'
 STATIC_DIR = BASE_DIR / 'static'
 
 # SECURITY WARNING: keep the secret key used in production secret!
-# Usa una variable de entorno o usa la clave por defecto para desarrollo
-SECRET_KEY = os.getenv('SECRET_KEY', 'clave-segura-para-demo-aws-windows')
+#SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-clave-por-defecto-para-aws')
+SECRET_KEY = 'clave-segura-para-demo-aws'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# Lo dejamos en True para que veas errores si fallan las pruebas, 
-# pero idealmente en AWS productivo debería ser False.
-DEBUG = True
+# Forzamos True para la demo si el env falla
+DEBUG = True 
 
-# Permitimos cualquier host (necesario para Windows Server y AWS)
+# CAMBIO PARA AWS: Permitir cualquier IP
 ALLOWED_HOSTS = ['*']
-
 
 # Application definition
 INSTALLED_APPS = [
@@ -49,7 +51,7 @@ ROOT_URLCONF = 'BAZAR.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [TEMPLATES_DIR],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -66,34 +68,32 @@ WSGI_APPLICATION = 'BAZAR.wsgi.application'
 
 
 # Database
-# ---------------------------------------------------
-# Lógica Inteligente:
-# 1. Si detecta variables de AWS (DB_HOST), usa esa configuración.
-# 2. Si NO las detecta (estás en Local o Windows Server), usa XAMPP por defecto.
 
-if os.getenv('DB_HOST'):
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': os.getenv('DB_NAME'),
-            'USER': os.getenv('DB_USER'),
-            'PASSWORD': os.getenv('DB_PASSWORD'),
-            'HOST': os.getenv('DB_HOST'),
-            'PORT': '3306',
-        }
+# 1. CONEXION AWS (ACTIVA)
+# ---------------------------------------------------
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'bazar',
+        'USER': 'admin',
+        'PASSWORD': 'Agus123',
+        'HOST': 'localhost',
+        'PORT': '3306',
     }
-else:
-    # CONFIGURACIÓN POR DEFECTO (XAMPP / LOCAL)
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': 'bazar',       # Nombre de tu BD en XAMPP
-            'USER': 'root',        # Usuario por defecto XAMPP
-            'PASSWORD': '',        # Sin contraseña por defecto
-            'HOST': 'localhost',
-            'PORT': '3306',
-        }
-    }
+}
+
+# 2. CONEXION XAMPP LOCAL (COMENTADA PARA RESPALDO)
+# ---------------------------------------------------
+# DATABASES = {
+#    'default': {
+#        'ENGINE': 'django.db.backends.mysql',
+#        'NAME': os.getenv('DB_NAME'),
+#        'USER': os.getenv('DB_USER'),
+#        'PASSWORD': os.getenv('DB_PASSWORD'),
+#        'HOST': os.getenv('DB_HOST'),
+#        'PORT': os.getenv('DB_PORT'),
+#    }
+# }
 
 
 # Password validation
@@ -112,7 +112,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-# Modelo de usuario personalizado
 AUTH_USER_MODEL = 'VENTASAPP.Usuario'
 
 # Internationalization
@@ -124,9 +123,6 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [STATIC_DIR]
-
-# Carpeta donde se guardarán los estáticos al usar "collectstatic" (Requerido para producción)
-STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
