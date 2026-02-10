@@ -2,7 +2,10 @@
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
+import pymysql  # <--- Agregado
 
+# Le decimos a Django: "Usa PyMySQL como si fuera el cliente nativo de MySQL"
+pymysql.install_as_MySQLdb()  # <--- Agregado
 
 def main():
     """Run administrative tasks."""
