@@ -1,7 +1,9 @@
 asgiref==3.10.0
 Django==5.2.8
-pymysql==1.1.0
+mysqlclient==2.2.7
+PyMySQL==1.1.0
 python-dotenv==1.2.1
 sqlparse==0.5.3
 tzdata==2025.2
 waitress==3.0.0
+whitenoise==6.11.0
